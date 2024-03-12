@@ -2,7 +2,6 @@ package com.ssafy.lyricit.room.domain;
 
 import com.ssafy.lyricit.common.BaseEntity;
 
-import jakarta.persistence.Entity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -15,8 +14,10 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Entity
 public class Room extends BaseEntity {
+	@NonNull
+	private Long roomNumber;
+
 	@NonNull
 	private String name;
 
