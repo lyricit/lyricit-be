@@ -28,6 +28,9 @@ dependencies {
 	// websocket
 	implementation 'org.springframework.boot:spring-boot-starter-websocket'
 
+	// gson
+	implementation group: 'com.google.code.gson', name: 'gson', version: '2.10.1'
+
 	// redis
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
