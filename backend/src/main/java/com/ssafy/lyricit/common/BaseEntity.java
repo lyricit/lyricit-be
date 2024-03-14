@@ -1,17 +1,8 @@
 package com.ssafy.lyricit.common;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.EntityListeners;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.MappedSuperclass;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,18 +12,22 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@MappedSuperclass
-@EntityListeners(AuditingEntityListener.class)
 public class BaseEntity {
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
-
-	@CreatedDate
-	@Column(columnDefinition = "datetime(0) default now(0)", nullable = false, updatable = false)
+	private UUID id;
 	private LocalDateTime createdAt;
-
-	@LastModifiedDate
-	@Column(columnDefinition = "datetime(0) default now(0)", nullable = false)
 	private LocalDateTime updatedAt;
+
+	public void generateUUID() {
+		if (id == null) {
+			id = UUID.randomUUID();
+		}
+	}
+
+	public void setCreatedAtNow() {
+		this.createdAt = LocalDateTime.now();
+	}
+
+	public void setUpdatedAtNow() {
+		this.updatedAt = LocalDateTime.now();
+	}
 }

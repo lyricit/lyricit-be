@@ -6,6 +6,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Getter
 public enum ErrorCode {
+	MESSAGE_NOT_FOUND(404, "메세지를 찾을 수 없습니다."),
+
 	// === GLOBAL BASE ERROR CODE ===
 	// 4xx: Client Errors
 	BAD_REQUEST(400, "Bad Request"),
