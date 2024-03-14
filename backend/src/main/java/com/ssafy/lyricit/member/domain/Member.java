@@ -1,7 +1,5 @@
 package com.ssafy.lyricit.member.domain;
 
-import com.ssafy.lyricit.common.BaseEntity;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -14,7 +12,15 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Member extends BaseEntity {
+public class Member {
 	@NonNull
 	private String nickname;
+	@NonNull
+	private String deco;
+	@NonNull
+	private String face;
+	@NonNull
+	private String decoColor;
+	@NonNull
+	private String faceColor;
 }
