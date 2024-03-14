@@ -3,7 +3,6 @@ package com.ssafy.lyricit.common;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-import jakarta.persistence.MappedSuperclass;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,7 +12,6 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@MappedSuperclass
 public class BaseEntity {
 	private UUID id;
 	private LocalDateTime createdAt;
