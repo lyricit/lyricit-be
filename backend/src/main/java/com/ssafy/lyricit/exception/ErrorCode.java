@@ -6,6 +6,9 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Getter
 public enum ErrorCode {
+	// Member
+	MEMBER_NOT_FOUND(404, "회원를 찾을 수 없습니다."),
+
 	MESSAGE_NOT_FOUND(404, "메세지를 찾을 수 없습니다."),
 
 	// === GLOBAL BASE ERROR CODE ===
