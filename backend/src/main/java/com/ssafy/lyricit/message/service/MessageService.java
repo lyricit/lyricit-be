@@ -4,10 +4,11 @@ import java.time.LocalDateTime;
 
 import org.springframework.stereotype.Service;
 
+import com.ssafy.lyricit.member.domain.Member;
+import com.ssafy.lyricit.member.repository.MemberRepository;
 import com.ssafy.lyricit.message.domain.Message;
 import com.ssafy.lyricit.message.dto.MessageRequestDto;
 import com.ssafy.lyricit.message.dto.MessageResponseDto;
-import com.ssafy.lyricit.member.repository.MemberRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -18,7 +19,8 @@ public class MessageService {
 	private final MemberRepository memberRepository;
 
 	public MessageResponseDto enter(String memberId, MessageRequestDto messageRequest) {
-		String nickname = memberRepository.findNicknameById(memberId).getNickname();
+		Member member = memberRepository.findById(memberId).get();
+		String nickname = member.getNickname();
 		Long roomNumber = messageRequest.roomNumber();
 
 		Message message = Message.builder()// request to entity
@@ -32,7 +34,8 @@ public class MessageService {
 	}
 
 	public MessageResponseDto exit(String memberId, MessageRequestDto messageRequest) {
-		String nickname = memberRepository.findNicknameById(memberId).getNickname();
+		Member member = memberRepository.findById(memberId).get();
+		String nickname = member.getNickname();
 		Long roomNumber = messageRequest.roomNumber();
 
 		Message message = Message.builder()// request to entity
@@ -46,7 +49,8 @@ public class MessageService {
 	}
 
 	public MessageResponseDto chat(String memberId, MessageRequestDto messageRequest) {
-		String nickname = memberRepository.findNicknameById(memberId).getNickname();
+		Member member = memberRepository.findById(memberId).get();
+		String nickname = member.getNickname();
 		Long roomNumber = messageRequest.roomNumber();
 		String content = messageRequest.content();
 

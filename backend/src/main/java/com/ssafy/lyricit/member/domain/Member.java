@@ -1,5 +1,9 @@
 package com.ssafy.lyricit.member.domain;
 
+import com.ssafy.lyricit.common.BaseEntity;
+import com.ssafy.lyricit.member.dto.MemberDto;
+
+import jakarta.persistence.Entity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -12,7 +16,8 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Member {
+@Entity
+public class Member extends BaseEntity {
 	@NonNull
 	private String nickname;
 	@NonNull
@@ -23,4 +28,14 @@ public class Member {
 	private String decoColor;
 	@NonNull
 	private String faceColor;
+
+	public MemberDto toDto() {
+		return MemberDto.builder()
+			.nickname(nickname)
+			.deco(deco)
+			.face(face)
+			.decoColor(decoColor)
+			.faceColor(faceColor)
+			.build();
+	}
 }
