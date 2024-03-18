@@ -17,6 +17,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
+import lombok.ToString;
 
 @Getter
 @Setter
@@ -24,6 +25,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 @Entity
+@ToString
 public class Room extends BaseEntity {
 	@NonNull
 	private String name;
@@ -46,6 +48,7 @@ public class Room extends BaseEntity {
 
 	public RoomDto toDto(MemberInGameDto memberInGameDto) {
 		return RoomDto.builder()
+			.roomId(getId())
 			.name(name)
 			.password(password)
 			.playerCount(1L)
