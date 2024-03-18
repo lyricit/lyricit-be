@@ -1,39 +1,37 @@
 package com.ssafy.lyricit.member.controller;
 
-import java.util.List;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.stereotype.Controller;
 
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import com.ssafy.lyricit.member.dto.MemberDto;
+import com.ssafy.lyricit.member.aspect.MemberIdCheck;
 import com.ssafy.lyricit.member.service.MemberService;
 
 import lombok.RequiredArgsConstructor;
 
-@RestController
-@RequestMapping("/members")
+@Controller
 @RequiredArgsConstructor
 public class MemberController {
 	private final MemberService memberService;
+	private final SimpMessagingTemplate template; //특정 Broker로 메세지를 전달
 
-	@PostMapping("/join")
-	public ResponseEntity<Void> join(@RequestBody MemberDto memberDto) {
-		memberService.createMember(memberDto);
-		return ResponseEntity.ok().build();
+	// @MessageMapping("/enter/{roomNumber}")
+	// public void login(MemberRequestDto memberRequest, SimpMessageHeaderAccessor headerAccessor) {// + join
+	// 	String memberId = (String)headerAccessor.getSessionAttributes().get("memberId");
+	// 	memberService.createMember(memberRequest);
+	// 	template.convertAndSend("/sub/chat/room/" + messageResponse.roomNumber(), messageResponse);
+	// }
+
+	@MemberIdCheck
+	@MessageMapping("/members/{memberId}")
+	public void getMember(@DestinationVariable String memberId) {
+		template.convertAndSend("/sub/lounge", memberService.findMemberById(memberId));
 	}
 
-	@GetMapping("/{memberId}")
-	public ResponseEntity<MemberDto> getMember(@PathVariable String memberId) {
-		return ResponseEntity.ok(memberService.findMemberById(memberId));
-	}
-
-	@GetMapping
-	public ResponseEntity<List<MemberDto>> getAllMembers() {
-		return ResponseEntity.ok(memberService.findAllMembers());
+	@MemberIdCheck
+	@MessageMapping("/members")
+	public void getAllMembers() {
+		template.convertAndSend("/sub/lounge", memberService.findAllMembers());
 	}
 }
