@@ -6,4 +6,5 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum RedisDatabaseType {
+	ROOM_DB_IDX
 }

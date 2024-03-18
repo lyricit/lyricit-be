@@ -28,6 +28,7 @@ public class StompWebSocketConfig implements WebSocketMessageBrokerConfigurer {
 			.setAllowedOriginPatterns("*");
 	}
 
+	@Override
 	public void configureClientInboundChannel(ChannelRegistration registration) {
 		registration.interceptors(channelInboundInterceptor);
 	}

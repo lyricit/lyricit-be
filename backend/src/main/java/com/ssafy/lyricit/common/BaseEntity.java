@@ -33,4 +33,6 @@ public class BaseEntity {
 	@LastModifiedDate
 	@Column(columnDefinition = "datetime(0) default now(0)", nullable = false)
 	private LocalDateTime updatedAt;
+
+	private Boolean deleted = false;
 }

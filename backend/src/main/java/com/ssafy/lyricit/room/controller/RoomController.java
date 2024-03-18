@@ -1,46 +1,36 @@
 package com.ssafy.lyricit.room.controller;
 
-import java.util.List;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
+import org.springframework.stereotype.Controller;
 
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
-import com.ssafy.lyricit.room.domain.Room;
+import com.ssafy.lyricit.room.dto.RoomRequestDto;
 import com.ssafy.lyricit.room.service.RoomService;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
 
-@RestController
-@RequestMapping(value = "/chat")
+@Controller
 @RequiredArgsConstructor
-@Log4j2
 public class RoomController {
-
 	private final RoomService roomService;
 
-	// 방 목록 조회
-	@GetMapping(value = "/rooms")
-	public ResponseEntity<List<Room>> rooms() {
-		log.info("# All Chat Rooms");
-		return ResponseEntity.ok(roomService.findAllRooms());
-	}
-
 	// 방 개설
-	@PostMapping(value = "/room")
-	public ResponseEntity<Room> create(@RequestParam(name = "name") String name) {
-		log.info("# Create Chat Room , name: " + name);
-		return ResponseEntity.ok(roomService.createRoom(name));
+	@MessageMapping("/rooms/create")
+	public void addRoom(SimpMessageHeaderAccessor headerAccessor, RoomRequestDto roomRequest) {
+		String memberId = (String)headerAccessor.getSessionAttributes().get("memberId");
+		roomService.createRoom(memberId, roomRequest);
 	}
 
 	// 방 조회
-	@GetMapping("/room")
-	public ResponseEntity<Room> getRoom(Long roomNumber) {
-		log.info("# get Chat Room, roomNumber : " + roomNumber);
-		return ResponseEntity.ok(roomService.findRoomById(roomNumber));
+	@MessageMapping("/rooms/{roomNumber}")
+	public void getRoom(@DestinationVariable String roomNumber) {
+		roomService.readRoomByRoomNumber(roomNumber);
+	}
+
+	// 방 목록 조회
+	@MessageMapping
+	public void getAllRooms() {
+		roomService.readAllRooms();
 	}
 }
