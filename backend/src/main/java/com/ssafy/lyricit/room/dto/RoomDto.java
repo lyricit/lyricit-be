@@ -19,6 +19,7 @@ import lombok.Setter;
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
 // on redis
 public class RoomDto {
+	private String roomId;
 	private String name;
 	private String password;
 	private Long playerCount;
@@ -49,5 +50,24 @@ public class RoomDto {
 			.playerCount(playerCount)
 			.playerLimit(playerLimit)
 			.build();
+	}
+
+	@Override
+	public String toString() {
+		String membersNicknames = members.stream()
+			.map(memberInGameDto -> memberInGameDto.memberDto().nickname())
+			.toList()
+			.toString();
+
+		return "{" +
+			"\n\tname='" + name + '\'' +
+			", \n\tplayerCount=" + playerCount +
+			", \n\tplayerLimit=" + playerLimit +
+			", \n\tisPlaying=" + isPlaying +
+			", \n\tisPublic=" + isPublic +
+			", \n\troundLimit=" + roundLimit +
+			", \n\troundTime=" + roundTime +
+			", \n\tmembers=" + membersNicknames +
+			"\n}";
 	}
 }

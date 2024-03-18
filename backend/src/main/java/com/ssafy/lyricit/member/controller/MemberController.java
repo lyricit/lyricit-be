@@ -16,13 +16,6 @@ public class MemberController {
 	private final MemberService memberService;
 	private final SimpMessagingTemplate template; //특정 Broker로 메세지를 전달
 
-	// @MessageMapping("/enter/{roomNumber}")
-	// public void login(MemberRequestDto memberRequest, SimpMessageHeaderAccessor headerAccessor) {// + join
-	// 	String memberId = (String)headerAccessor.getSessionAttributes().get("memberId");
-	// 	memberService.createMember(memberRequest);
-	// 	template.convertAndSend("/sub/chat/room/" + messageResponse.roomNumber(), messageResponse);
-	// }
-
 	@MemberIdCheck
 	@MessageMapping("/members/{memberId}")
 	public void getMember(@DestinationVariable String memberId) {

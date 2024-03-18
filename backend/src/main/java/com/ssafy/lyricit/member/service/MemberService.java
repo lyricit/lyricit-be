@@ -4,6 +4,8 @@ import static com.ssafy.lyricit.exception.ErrorCode.*;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,10 +21,11 @@ import lombok.RequiredArgsConstructor;
 @Transactional
 public class MemberService {
 	private final MemberRepository memberRepository;
+	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
 	public String join(MemberDto memberDto) {
 		Member member = memberDto.toEntity();
-		System.out.println("가입한 유저 \n" + member);// log
+		log.info("\n [가입 완료] \n {}", member);
 		memberRepository.save(member);
 		return member.getId();// 랜덤으로 새로 생성된 id 반환
 	}
@@ -34,19 +37,21 @@ public class MemberService {
 
 		Member member = memberRepository.findById(memberId).orElseThrow(() -> new BaseException(MEMBER_NOT_FOUND));
 		member.update(memberDto);// overwrite status
-		System.out.println("로그인 유저 \n" + member);// log
+		log.info("\n [로그인 완료] \n {}", member);
 		return memberId;
 	}
 
 	public MemberDto findMemberById(String memberId) {
 		Member member = memberRepository.findById(memberId).orElseThrow(() -> new BaseException(MEMBER_NOT_FOUND));
-		System.out.println("찾은 유저 \n" + member);// log
+		log.info("\n [회원 검색 결과] \n {}", member);
 		return member.toDto();
 	}
 
 	public List<MemberDto> findAllMembers() {
-		return memberRepository.findAll().stream()
+		List<MemberDto> members = memberRepository.findAll().stream()
 			.map(Member::toDto)
 			.toList();
+		log.info("\n [회원 목록] \n {}", members);
+		return members;
 	}
 }
