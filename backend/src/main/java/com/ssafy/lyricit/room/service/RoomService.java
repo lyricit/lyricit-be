@@ -14,6 +14,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.ssafy.lyricit.chat.dto.ChatRequestDto;
 import com.ssafy.lyricit.common.GlobalEventResponse;
 import com.ssafy.lyricit.common.type.EventType;
 import com.ssafy.lyricit.exception.BaseException;
@@ -36,7 +37,7 @@ public class RoomService {
 	private final RedisTemplate<String, Object> roomRedisTemplate;
 	private final RoomRepository roomRepository;
 	private final MemberRepository memberRepository;
-	private final SimpMessagingTemplate template; // 특정 Broker로 메세지를 전달
+	private final SimpMessagingTemplate template;
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
 	public String createRoom(String memberId, RoomRequestDto roomRequest) {
@@ -96,14 +97,76 @@ public class RoomService {
 		roomDto.setPlayerCount(roomDto.getPlayerCount() + 1);
 		roomRedisTemplate.opsForValue().set(roomNumber, roomDto);// update
 
-		log.info("\n [방 입장 완료] \n {}", newMember.memberDto().nickname());
+		log.info("\n [방 입장 완료] \n {}", newMember.member().nickname());
 
-		// pub to room
-		template.convertAndSend("/sub/room/" + roomNumber,
+		// pub member to room
+		template.convertAndSend("/sub/rooms/" + roomNumber,
 			GlobalEventResponse.builder()
 				.type(MEMBER_IN.name())
-				.data(newMember.memberDto().nickname())
+				.data(newMember)
 				.build());
+
+		// pub message to room
+		template.convertAndSend("/pub/chat/enter",// -> chat controller
+			ChatRequestDto.builder()
+				.roomNumber(roomNumber)
+				.nickname(newMember.member().nickname())
+				.content("")
+				.build()
+		);
+	}
+
+	public void exitRoom(String memberId, String roomNumber) {
+		// check redis key
+		if (Boolean.FALSE.equals(roomRedisTemplate.hasKey(roomNumber))) {
+			throw new BaseException(ROOM_NOT_FOUND);
+		}
+
+		RoomDto roomDto = (RoomDto)roomRedisTemplate.opsForValue().get(roomNumber);
+
+		// remove member from room
+		MemberInGameDto memberInGameDto = memberRepository.findById(memberId)
+			.orElseThrow(() -> new BaseException(MEMBER_NOT_FOUND))
+			.toInGameDto();
+
+		roomDto.getMembers().remove(memberInGameDto);
+		roomDto.setPlayerCount(roomDto.getPlayerCount() - 1);
+
+		// if room empty
+		if (roomDto.getPlayerCount() == 0) {
+			roomRedisTemplate.delete(roomNumber);
+			roomRepository.findById(roomDto.getRoomId())
+				.orElseThrow(() -> new BaseException(ROOM_NOT_FOUND))
+				.setDeleted(true);// soft deletion
+
+			template.convertAndSend("/sub/lounge",
+				GlobalEventResponse.builder()
+					.type(EventType.ROOM_DELETED.name())
+					.data(roomNumber)
+					.build());
+			log.info("\n [방 삭제 완료] \n {}", roomNumber);
+			return;
+		}
+
+		roomRedisTemplate.opsForValue().set(roomNumber, roomDto);// update
+
+		log.info("\n [방 퇴장 완료] \n {}", memberInGameDto.member().nickname());
+
+		// pub member to room
+		template.convertAndSend("/sub/rooms/" + roomNumber,
+			GlobalEventResponse.builder()
+				.type(MEMBER_OUT.name())
+				.data(memberInGameDto)
+				.build());
+
+		// pub message to room
+		template.convertAndSend("/pub/chat/exit",// -> chat controller
+			ChatRequestDto.builder()
+				.roomNumber(roomNumber)
+				.nickname(memberInGameDto.member().nickname())
+				.content("")
+				.build()
+		);
 	}
 
 	public List<RoomOutsideDto> readAllRooms() {// 라운지 접근 시 단 한번 호출
@@ -156,7 +219,8 @@ public class RoomService {
 		template.convertAndSend("/sub/lounge",
 			GlobalEventResponse.builder()
 				.type(EventType.ROOM_DELETED.name())
-				.data(roomDto.toOutsideDto(roomNumber)));
+				.data(roomNumber)
+				.build());
 	}
 
 	private String findEmptyRoomNumber() {
