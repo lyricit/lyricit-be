@@ -1,5 +1,7 @@
 package com.ssafy.lyricit.common.type;
 
 public enum EventType {
-	CREATED, UPDATED, DELETED
+	ROOM_CREATED, ROOM_UPDATED, ROOM_DELETED,
+	MEMBER_IN, MEMBER_MESSAGE, MEMBER_OUT,
+	SCORE_UPDATED
 }

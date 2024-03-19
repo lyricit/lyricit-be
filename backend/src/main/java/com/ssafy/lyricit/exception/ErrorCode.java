@@ -14,6 +14,10 @@ public enum ErrorCode {
 
 	// Room
 	ROOM_NOT_FOUND(404, "방을 찾을 수 없습니다."),
+	ROOM_FULL(409, "방이 꽉 찼습니다."),
+	PASSWORD_REQUIRED(401, "비밀번호가 필요합니다."),
+	WRONG_PASSWORD(401, "비밀번호가 틀렸습니다."),
+
 
 	// === GLOBAL BASE ERROR CODE ===
 	// 4xx: Client Errors

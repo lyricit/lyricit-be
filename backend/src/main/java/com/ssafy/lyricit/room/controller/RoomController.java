@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ssafy.lyricit.room.dto.RoomOutsideDto;
+import com.ssafy.lyricit.room.dto.RoomPasswordDto;
 import com.ssafy.lyricit.room.dto.RoomRequestDto;
 import com.ssafy.lyricit.room.service.RoomService;
 
@@ -30,17 +31,22 @@ public class RoomController {
 		return ResponseEntity.ok(roomService.createRoom(memberId, roomRequest));
 	}
 
-	// 방 조회
-	@GetMapping("/{roomNumber}")
-	public ResponseEntity<RoomOutsideDto> getRoom(
+	@PostMapping("/{roomNumber}")
+	public ResponseEntity<Void> enterRoom(
 		@RequestHeader String memberId,
-		@PathVariable String roomNumber) {
+		@PathVariable String roomNumber,
+		@RequestBody(required = false) RoomPasswordDto roomPasswordDto) {
+		roomService.enterRoom(memberId, roomNumber, roomPasswordDto);
+		return ResponseEntity.ok().build();
+	}
+
+	@GetMapping("/{roomNumber}")
+	public ResponseEntity<RoomOutsideDto> getRoom(@PathVariable String roomNumber) {
 		return ResponseEntity.ok(roomService.readRoomByRoomNumber(roomNumber));
 	}
 
-	// 방 목록 조회
 	@GetMapping
-	public ResponseEntity<List<RoomOutsideDto>> getAllRooms(@RequestHeader String memberId) {
+	public ResponseEntity<List<RoomOutsideDto>> getAllRooms() {
 		return ResponseEntity.ok(roomService.readAllRooms());
 	}
 }
