@@ -97,7 +97,7 @@ public class RoomService {
 		roomDto.setPlayerCount(roomDto.getPlayerCount() + 1);
 		roomRedisTemplate.opsForValue().set(roomNumber, roomDto);// update
 
-		log.info("\n [방 입장 완료] \n {}", newMember.member().nickname());
+		log.info("\n [방 입장 완료] \n {}", newMember.getMember().nickname());
 
 		// pub member to room
 		template.convertAndSend("/sub/rooms/" + roomNumber,
@@ -110,7 +110,7 @@ public class RoomService {
 		template.convertAndSend("/pub/chat/enter",// -> chat controller
 			ChatRequestDto.builder()
 				.roomNumber(roomNumber)
-				.nickname(newMember.member().nickname())
+				.nickname(newMember.getMember().nickname())
 				.content("")
 				.build()
 		);
@@ -150,7 +150,7 @@ public class RoomService {
 
 		roomRedisTemplate.opsForValue().set(roomNumber, roomDto);// update
 
-		log.info("\n [방 퇴장 완료] \n {}", memberInGameDto.member().nickname());
+		log.info("\n [방 퇴장 완료] \n {}", memberInGameDto.getMember().nickname());
 
 		// pub member to room
 		template.convertAndSend("/sub/rooms/" + roomNumber,
@@ -163,7 +163,7 @@ public class RoomService {
 		template.convertAndSend("/pub/chat/exit",// -> chat controller
 			ChatRequestDto.builder()
 				.roomNumber(roomNumber)
-				.nickname(memberInGameDto.member().nickname())
+				.nickname(memberInGameDto.getMember().nickname())
 				.content("")
 				.build()
 		);

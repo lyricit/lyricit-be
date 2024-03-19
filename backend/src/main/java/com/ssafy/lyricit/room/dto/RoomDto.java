@@ -55,7 +55,7 @@ public class RoomDto {
 	@Override
 	public String toString() {
 		String membersNicknames = members.stream()
-			.map(memberInGameDto -> memberInGameDto.member().nickname())
+			.map(memberInGameDto -> memberInGameDto.getMember().nickname())
 			.toList()
 			.toString();
 
