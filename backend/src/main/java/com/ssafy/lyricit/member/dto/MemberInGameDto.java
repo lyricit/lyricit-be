@@ -4,7 +4,7 @@ import lombok.Builder;
 
 @Builder
 public record MemberInGameDto(
-	MemberDto memberDto,
+	MemberDto member,
 	Boolean isReady,
 	Long score
 ) {

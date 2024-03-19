@@ -6,6 +6,7 @@ import java.util.List;
 import com.ssafy.lyricit.common.BaseEntity;
 import com.ssafy.lyricit.member.dto.MemberDto;
 import com.ssafy.lyricit.member.dto.MemberInGameDto;
+import com.ssafy.lyricit.member.dto.MemberRequestDto;
 import com.ssafy.lyricit.room.domain.Room;
 
 import jakarta.persistence.CascadeType;
@@ -47,16 +48,17 @@ public class Member extends BaseEntity {
 	@Builder.Default
 	private List<Room> rooms = new ArrayList<>();
 
-	public void update(MemberDto memberDto) {
-		this.nickname = memberDto.nickname();
-		this.deco = memberDto.deco();
-		this.face = memberDto.face();
-		this.decoColor = memberDto.decoColor();
-		this.faceColor = memberDto.faceColor();
+	public void update(MemberRequestDto memberRequestDto) {
+		this.nickname = memberRequestDto.nickname();
+		this.deco = memberRequestDto.deco();
+		this.face = memberRequestDto.face();
+		this.decoColor = memberRequestDto.decoColor();
+		this.faceColor = memberRequestDto.faceColor();
 	}
 
 	public MemberDto toDto() {
 		return MemberDto.builder()
+			.memberId(getId())
 			.nickname(nickname)
 			.deco(deco)
 			.face(face)
@@ -67,7 +69,7 @@ public class Member extends BaseEntity {
 
 	public MemberInGameDto toInGameDto() {
 		return MemberInGameDto.builder()
-			.memberDto(toDto())
+			.member(toDto())
 			.isReady(false)
 			.score(0L)
 			.build();

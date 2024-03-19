@@ -9,7 +9,7 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.stereotype.Component;
 
-import com.ssafy.lyricit.member.dto.MemberDto;
+import com.ssafy.lyricit.member.dto.MemberRequestDto;
 import com.ssafy.lyricit.member.service.MemberService;
 
 import lombok.RequiredArgsConstructor;
@@ -32,20 +32,20 @@ public class ChannelInboundInterceptor implements ChannelInterceptor {
 		Map<String, Object> attributes = header.getSessionAttributes();
 		String memberId = header.getFirstNativeHeader("memberId");
 
-		MemberDto memberDto = createMemberDto(header);
+		MemberRequestDto memberRequestDto = createMemberDto(header);
 
 		if (memberId == null) {
-			memberId = memberService.join(memberDto);
+			memberId = memberService.join(memberRequestDto);
 		} else {
-			memberId = memberService.login(memberId, memberDto);
+			memberId = memberService.login(memberId, memberRequestDto);
 		}
 
 		attributes.put("memberId", memberId);
 		header.setSessionAttributes(attributes);
 	}
 
-	private MemberDto createMemberDto(StompHeaderAccessor header) {
-		return MemberDto.builder()
+	private MemberRequestDto createMemberDto(StompHeaderAccessor header) {
+		return MemberRequestDto.builder()
 			.nickname(header.getFirstNativeHeader("nickname"))
 			.deco(header.getFirstNativeHeader("deco"))
 			.face(header.getFirstNativeHeader("face"))
