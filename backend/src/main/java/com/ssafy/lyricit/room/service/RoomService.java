@@ -232,4 +232,32 @@ public class RoomService {
 		} while (Boolean.TRUE.equals(roomRedisTemplate.hasKey(roomNumberStr)));
 		return roomNumberStr;
 	}
+
+	public void ready(String memberId, String roomNumber) {
+		// check redis key
+		if (Boolean.FALSE.equals(roomRedisTemplate.hasKey(roomNumber))) {
+			throw new BaseException(BAD_REQUEST);
+		}
+
+		RoomDto roomDto = (RoomDto)roomRedisTemplate.opsForValue().get(roomNumber);
+
+		// find the member and set isReady to opposite
+		for (MemberInGameDto memberInGameDto : roomDto.getMembers()) {
+			if (memberInGameDto.getMemberId().equals(memberId)) {
+				memberInGameDto.setIsReady(!memberInGameDto.isReady());
+				break;
+			}
+		}
+
+		// update to Redis
+		roomRedisTemplate.opsForValue().set(roomNumber, roomDto);
+
+		// pub to room
+		template.convertAndSend("/sub/room/" + roomNumber,
+			GlobalEventResponse.builder()
+				.type(MEMBER_READY.name())
+				.data(memberId)
+				.build());
+	}
+
 }
