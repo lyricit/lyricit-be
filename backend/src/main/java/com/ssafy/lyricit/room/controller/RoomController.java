@@ -60,11 +60,11 @@ public class RoomController {
 		return ResponseEntity.ok(roomService.readAllRooms());
 	}
 
-	// @PutMapping("/{roomNumber}/ready")
-	// public ResponseEntity<Void> ready(
-	// 	@RequestHeader String memberId,
-	// 	@PathVariable String roomNumber) {
-	// 	roomService.ready(memberId, roomNumber);
-	// 	return ResponseEntity.ok().build();
-	// }
+	@PutMapping("/{roomNumber}/ready")
+	public ResponseEntity<Void> ready(
+		@RequestHeader String memberId,
+		@PathVariable String roomNumber) {
+		roomService.ready(memberId, roomNumber);
+		return ResponseEntity.ok().build();
+	}
 }
