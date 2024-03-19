@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.ssafy.lyricit.exception.BaseException;
 import com.ssafy.lyricit.member.domain.Member;
 import com.ssafy.lyricit.member.dto.MemberDto;
+import com.ssafy.lyricit.member.dto.MemberRequestDto;
 import com.ssafy.lyricit.member.repository.MemberRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -23,20 +24,20 @@ public class MemberService {
 	private final MemberRepository memberRepository;
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
-	public String join(MemberDto memberDto) {
-		Member member = memberDto.toEntity();
+	public String join(MemberRequestDto memberRequestDto) {
+		Member member = memberRequestDto.toEntity();
 		log.info("\n [가입 완료] \n {}", member);
 		memberRepository.save(member);
-		return member.getId();// 랜덤으로 새로 생성된 id 반환
+		return member.getId();// 랜덤으로 새로 생성된 memberId 반환
 	}
 
-	public String login(String memberId, MemberDto memberDto) {
+	public String login(String memberId, MemberRequestDto memberRequestDto) {
 		if (!memberRepository.existsById(memberId)) {// 사용자의 id가 유효하지 않을 경우 강제 가입
-			return join(memberDto);
+			return join(memberRequestDto);
 		}
 
 		Member member = memberRepository.findById(memberId).orElseThrow(() -> new BaseException(MEMBER_NOT_FOUND));
-		member.update(memberDto);// overwrite status
+		member.update(memberRequestDto);// overwrite status
 		log.info("\n [로그인 완료] \n {}", member);
 		return memberId;
 	}
