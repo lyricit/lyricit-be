@@ -56,7 +56,8 @@ public class RoomService {
 		template.convertAndSend("/sub/lounge",
 			GlobalEventResponse.builder()
 				.type(EventType.CREATED.name())
-				.data(roomOutsideDto));
+				.data(roomOutsideDto)
+				.build());
 		return roomNumber;
 	}
 
