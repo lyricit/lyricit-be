@@ -1,5 +1,6 @@
 package com.ssafy.lyricit.room.service;
 
+import static com.ssafy.lyricit.common.type.EventType.*;
 import static com.ssafy.lyricit.exception.ErrorCode.*;
 
 import java.util.ArrayList;
@@ -17,10 +18,12 @@ import com.ssafy.lyricit.common.GlobalEventResponse;
 import com.ssafy.lyricit.common.type.EventType;
 import com.ssafy.lyricit.exception.BaseException;
 import com.ssafy.lyricit.member.domain.Member;
+import com.ssafy.lyricit.member.dto.MemberInGameDto;
 import com.ssafy.lyricit.member.repository.MemberRepository;
 import com.ssafy.lyricit.room.domain.Room;
 import com.ssafy.lyricit.room.dto.RoomDto;
 import com.ssafy.lyricit.room.dto.RoomOutsideDto;
+import com.ssafy.lyricit.room.dto.RoomPasswordDto;
 import com.ssafy.lyricit.room.dto.RoomRequestDto;
 import com.ssafy.lyricit.room.repository.RoomRepository;
 
@@ -43,22 +46,64 @@ public class RoomService {
 		roomRepository.save(room);
 
 		// to redis
-		RoomDto roomDto = room.toDto(member.toInGameDto());
+		RoomDto roomDto = room.toDto();
 		String roomNumber = findEmptyRoomNumber();
 		roomRedisTemplate.opsForValue().set(roomNumber, roomDto);
 
 		log.info("\n [방 생성 완료] \n== mysql 저장 ==\n {} \n", room);
 		log.info("\n== redis 저장 == \n [{}번 방] \n {}", roomNumber, roomDto);
 
-		RoomOutsideDto roomOutsideDto = roomDto.toOutsideDto(roomNumber);
-
 		// pub to lounge
+		RoomOutsideDto roomOutsideDto = roomDto.toOutsideDto(roomNumber);
 		template.convertAndSend("/sub/lounge",
 			GlobalEventResponse.builder()
-				.type(EventType.CREATED.name())
+				.type(EventType.ROOM_CREATED.name())
 				.data(roomOutsideDto)
 				.build());
+
 		return roomNumber;
+	}
+
+	public void enterRoom(String memberId, String roomNumber, RoomPasswordDto roomPasswordDto) {
+		// check redis key
+		if (Boolean.FALSE.equals(roomRedisTemplate.hasKey(roomNumber))) {
+			throw new BaseException(ROOM_NOT_FOUND);
+		}
+
+		RoomDto roomDto = (RoomDto)roomRedisTemplate.opsForValue().get(roomNumber);
+
+		// check password
+		if (!roomDto.getPassword().isBlank()) {
+			if (roomPasswordDto == null) {// password not given
+				throw new BaseException(PASSWORD_REQUIRED);
+			} else if (!roomPasswordDto.password().equals(roomDto.getPassword())) {// password wrong
+				throw new BaseException(WRONG_PASSWORD);
+			}
+		}
+
+		// check room full
+		if (roomDto.getMembers().size() >= roomDto.getPlayerLimit()) {
+			throw new BaseException(ROOM_FULL);
+		}
+
+		// set new member for room
+		MemberInGameDto newMember = memberRepository.findById(memberId)
+			.orElseThrow(() -> new BaseException(MEMBER_NOT_FOUND))
+			.toInGameDto();
+
+		// add member to room
+		roomDto.getMembers().add(newMember);
+		roomDto.setPlayerCount(roomDto.getPlayerCount() + 1);
+		roomRedisTemplate.opsForValue().set(roomNumber, roomDto);// update
+
+		log.info("\n [방 입장 완료] \n {}", newMember.memberDto().nickname());
+
+		// pub to room
+		template.convertAndSend("/sub/room/" + roomNumber,
+			GlobalEventResponse.builder()
+				.type(MEMBER_IN.name())
+				.data(newMember.memberDto().nickname())
+				.build());
 	}
 
 	public List<RoomOutsideDto> readAllRooms() {// 라운지 접근 시 단 한번 호출
@@ -110,7 +155,7 @@ public class RoomService {
 		// pub to lounge -> client do delete job
 		template.convertAndSend("/sub/lounge",
 			GlobalEventResponse.builder()
-				.type(EventType.DELETED.name())
+				.type(EventType.ROOM_DELETED.name())
 				.data(roomDto.toOutsideDto(roomNumber)));
 	}
 
