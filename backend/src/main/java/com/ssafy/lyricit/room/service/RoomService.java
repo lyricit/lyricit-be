@@ -240,14 +240,15 @@ public class RoomService {
 			throw new BaseException(BAD_REQUEST);
 		}
 
+		// roomDto
 		RoomDto roomDto = (RoomDto)roomRedisTemplate.opsForValue().get(roomNumber);
 
 		// find the member and set isReady to opposite
-
 		for (MemberInGameDto memberInGameDto : roomDto.getMembers()) {
-			MemberDto member = memberInGameDto.member();
+			MemberDto member = memberInGameDto.getMember();
 			if (member.memberId().equals(memberId)) {
-				memberInGameDto.isReady() = !memberInGameDto.isReady();
+				memberInGameDto.setIsReady(!memberInGameDto.getIsReady());
+
 				break;
 			}
 		}
@@ -256,10 +257,10 @@ public class RoomService {
 		roomRedisTemplate.opsForValue().set(roomNumber, roomDto);
 
 		// pub to room
-		template.convertAndSend("/sub/room/" + roomNumber,
+		template.convertAndSend("/sub/rooms/" + roomNumber,
 			GlobalEventResponse.builder()
 				.type(MEMBER_READY.name())
-				.data(memberId)
+				.data(roomDto)
 				.build());
 	}
 }
