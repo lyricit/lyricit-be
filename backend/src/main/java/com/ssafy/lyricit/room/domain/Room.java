@@ -1,10 +1,9 @@
 package com.ssafy.lyricit.room.domain;
 
-import java.util.Collections;
+import java.util.ArrayList;
 
 import com.ssafy.lyricit.common.BaseEntity;
 import com.ssafy.lyricit.member.domain.Member;
-import com.ssafy.lyricit.member.dto.MemberInGameDto;
 import com.ssafy.lyricit.room.dto.RoomDto;
 
 import jakarta.persistence.Entity;
@@ -46,18 +45,18 @@ public class Room extends BaseEntity {
 	@JoinColumn(name = "member_id")
 	private Member member;
 
-	public RoomDto toDto(MemberInGameDto memberInGameDto) {
+	public RoomDto toDto() {
 		return RoomDto.builder()
 			.roomId(getId())
 			.name(name)
 			.password(password)
-			.playerCount(1L)
+			.playerCount(0L)
 			.playerLimit(playerLimit)
 			.isPlaying(false)
 			.isPublic(password.isBlank())
 			.roundLimit(roundLimit)
 			.roundTime(roundTime)
-			.members(Collections.singletonList(memberInGameDto))
+			.members(new ArrayList<>())
 			.build();
 	}
 }
