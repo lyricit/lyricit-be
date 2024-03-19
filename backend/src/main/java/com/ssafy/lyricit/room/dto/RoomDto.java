@@ -16,7 +16,6 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
 // on redis
 public class RoomDto {
 	private String roomId;
