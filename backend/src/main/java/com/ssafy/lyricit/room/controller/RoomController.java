@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -57,5 +58,13 @@ public class RoomController {
 	@GetMapping
 	public ResponseEntity<List<RoomOutsideDto>> getAllRooms() {
 		return ResponseEntity.ok(roomService.readAllRooms());
+	}
+
+	@PutMapping("/{roomNumber}/ready")
+	public ResponseEntity<Void> ready(
+		@RequestHeader String memberId,
+		@PathVariable String roomNumber) {
+		roomService.ready(memberId, roomNumber);
+		return ResponseEntity.ok().build();
 	}
 }

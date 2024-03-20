@@ -19,6 +19,7 @@ import com.ssafy.lyricit.common.GlobalEventResponse;
 import com.ssafy.lyricit.common.type.EventType;
 import com.ssafy.lyricit.exception.BaseException;
 import com.ssafy.lyricit.member.domain.Member;
+import com.ssafy.lyricit.member.dto.MemberDto;
 import com.ssafy.lyricit.member.dto.MemberInGameDto;
 import com.ssafy.lyricit.member.repository.MemberRepository;
 import com.ssafy.lyricit.room.domain.Room;
@@ -232,4 +233,35 @@ public class RoomService {
 		} while (Boolean.TRUE.equals(roomRedisTemplate.hasKey(roomNumberStr)));
 		return roomNumberStr;
 	}
+
+	public void ready(String memberId, String roomNumber) {
+		// check redis key
+		if (Boolean.FALSE.equals(roomRedisTemplate.hasKey(roomNumber))) {
+			throw new BaseException(ROOM_NOT_FOUND);
+		}
+
+		// roomDto
+		RoomDto roomDto = (RoomDto)roomRedisTemplate.opsForValue().get(roomNumber);
+
+		// find the member and set isReady to opposite
+		for (MemberInGameDto memberInGameDto : roomDto.getMembers()) {
+			MemberDto member = memberInGameDto.getMember();
+			if (member.memberId().equals(memberId)) {
+				memberInGameDto.setIsReady(!memberInGameDto.getIsReady());
+
+				break;
+			}
+		}
+
+		// update to Redis
+		roomRedisTemplate.opsForValue().set(roomNumber, roomDto);
+
+		// pub to room
+		template.convertAndSend("/sub/rooms/" + roomNumber,
+			GlobalEventResponse.builder()
+				.type(MEMBER_READY.name())
+				.data(memberId)
+				.build());
+	}
 }
+
