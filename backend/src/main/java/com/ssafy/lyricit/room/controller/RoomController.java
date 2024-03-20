@@ -21,7 +21,7 @@ import com.ssafy.lyricit.room.service.RoomService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/rooms")
+@RequestMapping("/v1/rooms")
 @RequiredArgsConstructor
 public class RoomController {
 	private final RoomService roomService;
