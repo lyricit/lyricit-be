@@ -237,7 +237,7 @@ public class RoomService {
 	public void ready(String memberId, String roomNumber) {
 		// check redis key
 		if (Boolean.FALSE.equals(roomRedisTemplate.hasKey(roomNumber))) {
-			throw new BaseException(BAD_REQUEST);
+			throw new BaseException(ROOM_NOT_FOUND);
 		}
 
 		// roomDto
@@ -260,7 +260,7 @@ public class RoomService {
 		template.convertAndSend("/sub/rooms/" + roomNumber,
 			GlobalEventResponse.builder()
 				.type(MEMBER_READY.name())
-				.data(roomDto)
+				.data(memberId)
 				.build());
 	}
 }
