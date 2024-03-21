@@ -61,4 +61,25 @@ public class RedisConfig {
 		redisTemplate.setValueSerializer(serializer);
 		return redisTemplate;
 	}
+
+	// 게임 템플릿
+	@Bean
+	public RedisTemplate<String, Object> gameRedisTemplate() {
+		RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
+		redisTemplate.setConnectionFactory(createLettuceConnectionFactory(GAME_DB_IDX.ordinal()));
+		redisTemplate.setKeySerializer(new StringRedisSerializer());
+
+		// Value serialization for game data
+		ObjectMapper objectMapper = new ObjectMapper();
+		objectMapper.registerModule(new JavaTimeModule());
+		objectMapper.registerModule(new Jdk8Module());
+		objectMapper.registerModule(new ParameterNamesModule());
+
+		// // Value serialization settings
+		// Jackson2JsonRedisSerializer<GameDto> serializer = new Jackson2JsonRedisSerializer<>(GameDto.class);
+		// serializer.setObjectMapper(objectMapper);
+		// redisTemplate.setValueSerializer(serializer);
+
+		return redisTemplate;
+	}
 }
