@@ -3,7 +3,8 @@ package com.ssafy.lyricit.chat.domain;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 
-import com.ssafy.lyricit.chat.dto.ChatResponseDto;
+import com.ssafy.lyricit.chat.dto.LoungeChatResponseDto;
+import com.ssafy.lyricit.chat.dto.RoomChatResponseDto;
 import com.ssafy.lyricit.common.BaseEntity;
 
 import jakarta.persistence.Entity;
@@ -24,8 +25,16 @@ public class Chat extends BaseEntity {
 	private String nickname;
 	private String content;
 
-	public ChatResponseDto toResponseDto() {
-		return ChatResponseDto.builder()
+	public LoungeChatResponseDto toLoungeChatResponseDto() {
+		return LoungeChatResponseDto.builder()
+			.nickname(nickname)
+			.content(content)
+			.time(LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS))// todo: change to created time after save to db
+			.build();
+	}
+
+	public RoomChatResponseDto toRoomChatResponseDto() {
+		return RoomChatResponseDto.builder()
 			.roomNumber(roomNumber)
 			.nickname(nickname)
 			.content(content)

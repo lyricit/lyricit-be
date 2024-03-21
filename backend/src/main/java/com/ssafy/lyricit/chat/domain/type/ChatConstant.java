@@ -8,6 +8,7 @@ import lombok.Getter;
 public enum ChatConstant {
 	// system nickname
 	SYSTEM("SYSTEM"),
+	LOUNGE("LOUNGE"),
 
 	// in & out
 	ENTERED("님이 입장하셨습니다."),
