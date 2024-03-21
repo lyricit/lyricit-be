@@ -6,6 +6,7 @@ import lombok.Builder;
 
 @Builder
 public record MemberRequestDto(
+	String memberId,
 	String nickname,
 	String decoType,
 	String faceType,
