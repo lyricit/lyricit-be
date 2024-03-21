@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 import lombok.Builder;
 
 @Builder
-public record ChatResponseDto(
+public record RoomChatResponseDto(
 	String roomNumber,
 	String nickname,
 	String content,
