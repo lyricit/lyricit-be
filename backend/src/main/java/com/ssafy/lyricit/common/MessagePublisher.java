@@ -5,7 +5,9 @@ import static com.ssafy.lyricit.common.type.EndPointConstant.*;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
-import com.ssafy.lyricit.chat.dto.ChatRequestDto;
+import com.ssafy.lyricit.chat.dto.LoungeChatResponseDto;
+import com.ssafy.lyricit.chat.dto.RoomChatRequestDto;
+import com.ssafy.lyricit.chat.dto.RoomChatResponseDto;
 
 import lombok.RequiredArgsConstructor;
 
@@ -17,7 +19,7 @@ public class MessagePublisher {
 	public void publishInOutMessageToRoom(boolean isIn, String roomNumber, String nickname) {
 		String endPoint = isIn ? PUB_ENTER.getValue() : PUB_EXIT.getValue();
 		template.convertAndSend(endPoint,// -> chat controller
-			ChatRequestDto.builder()
+			RoomChatRequestDto.builder()
 				.roomNumber(roomNumber)
 				.nickname(nickname)
 				.content("")
@@ -41,7 +43,11 @@ public class MessagePublisher {
 				.build());
 	}
 
-	public void publishMessageToRoom(String roomNumber, Object message) {
-		template.convertAndSend(SUB_ROOM.getValue() + roomNumber, message);
+	public void publishMessageToLounge(LoungeChatResponseDto response) {
+		template.convertAndSend(SUB_LOUNGE.getValue(), response);
+	}
+
+	public void publishMessageToRoom(RoomChatResponseDto response) {
+		template.convertAndSend(SUB_ROOM.getValue() + response.roomNumber(), response);
 	}
 }

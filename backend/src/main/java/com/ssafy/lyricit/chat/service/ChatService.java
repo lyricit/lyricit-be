@@ -7,8 +7,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.ssafy.lyricit.chat.domain.Chat;
-import com.ssafy.lyricit.chat.dto.ChatRequestDto;
-import com.ssafy.lyricit.chat.dto.ChatResponseDto;
+import com.ssafy.lyricit.chat.dto.LoungeChatRequestDto;
+import com.ssafy.lyricit.chat.dto.LoungeChatResponseDto;
+import com.ssafy.lyricit.chat.dto.RoomChatRequestDto;
+import com.ssafy.lyricit.chat.dto.RoomChatResponseDto;
 import com.ssafy.lyricit.common.MessagePublisher;
 
 import lombok.RequiredArgsConstructor;
@@ -20,7 +22,7 @@ public class ChatService {
 	private final MessagePublisher messagePublisher;
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
-	public void sendEnterMessage(ChatRequestDto chatRequest) {
+	public void sendEnterMessage(RoomChatRequestDto chatRequest) {
 		Chat chat = Chat.builder()
 			.nickname(SYSTEM.getValue())
 			.roomNumber(chatRequest.roomNumber())
@@ -28,11 +30,11 @@ public class ChatService {
 			.build();
 		// todo: save message
 
-		messagePublisher.publishMessageToRoom(chatRequest.roomNumber(), chat.toResponseDto());
+		messagePublisher.publishMessageToRoom(chat.toRoomChatResponseDto());
 		log.info("\n{} 입장", chat.getNickname());
 	}
 
-	public void sendExitMessage(ChatRequestDto chatRequest) {
+	public void sendExitMessage(RoomChatRequestDto chatRequest) {
 		Chat chat = Chat.builder()
 			.nickname(SYSTEM.getValue())
 			.roomNumber(chatRequest.roomNumber())
@@ -40,11 +42,25 @@ public class ChatService {
 			.build();
 		// todo: save message
 
-		messagePublisher.publishMessageToRoom(chatRequest.roomNumber(), chat.toResponseDto());
+		messagePublisher.publishMessageToRoom(chat.toRoomChatResponseDto());
 		log.info("\n{} 퇴장", chat.getNickname());
 	}
 
-	public void sendChatMessage(ChatRequestDto chatRequest) {
+	public void sendLoungeChatMessage(LoungeChatRequestDto chatRequest) {
+		Chat chat = Chat.builder()
+			.nickname(chatRequest.nickname())
+			.roomNumber(LOUNGE.getValue())
+			.content(chatRequest.content())
+			.build();
+		//todo: save message
+
+		LoungeChatResponseDto response = chat.toLoungeChatResponseDto();
+		messagePublisher.publishMessageToLounge(response);
+		log.info("\n채팅 : 라운지 \n{} : {}   ({})",
+			response.nickname(), response.content(), response.time());
+	}
+
+	public void sendRoomChatMessage(RoomChatRequestDto chatRequest) {
 		Chat chat = Chat.builder()
 			.nickname(chatRequest.nickname())
 			.roomNumber(chatRequest.roomNumber())
@@ -52,8 +68,8 @@ public class ChatService {
 			.build();
 		// todo: save message
 
-		ChatResponseDto response = chat.toResponseDto();
-		messagePublisher.publishMessageToRoom(chatRequest.roomNumber(), response);
+		RoomChatResponseDto response = chat.toRoomChatResponseDto();
+		messagePublisher.publishMessageToRoom(response);
 		log.info("\n채팅 : {}번방 \n{} : {}   ({})",
 			response.roomNumber(), response.nickname(),
 			response.content(), response.time());
