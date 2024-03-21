@@ -7,18 +7,18 @@ import lombok.Builder;
 @Builder
 public record MemberRequestDto(
 	String nickname,
-	String deco,
-	String face,
+	String decoType,
+	String faceType,
 	String decoColor,
-	String faceColor
+	String skinColor
 ) {
 	public Member toEntity() {
 		return Member.builder()
 			.nickname(nickname())
-			.deco(deco())
-			.face(face())
+			.decoType(decoType())
+			.faceType(faceType())
 			.decoColor(decoColor())
-			.faceColor(faceColor())
+			.skinColor(skinColor())
 			.build();
 	}
 }

@@ -6,9 +6,9 @@ import lombok.Builder;
 public record MemberDto(
 	String memberId,
 	String nickname,
-	String deco,
-	String face,
+	String decoType,
+	String faceType,
 	String decoColor,
-	String faceColor
+	String skinColor
 ) {
 }

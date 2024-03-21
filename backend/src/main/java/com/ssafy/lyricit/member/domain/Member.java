@@ -33,16 +33,16 @@ public class Member extends BaseEntity {
 	private String nickname;
 
 	@NonNull
-	private String deco;
+	private String decoType;
 
 	@NonNull
-	private String face;
+	private String faceType;
 
 	@NonNull
 	private String decoColor;
 
 	@NonNull
-	private String faceColor;
+	private String skinColor;
 
 	@OneToMany(mappedBy = "member", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
 	@Builder.Default
@@ -50,20 +50,20 @@ public class Member extends BaseEntity {
 
 	public void update(MemberRequestDto memberRequestDto) {
 		this.nickname = memberRequestDto.nickname();
-		this.deco = memberRequestDto.deco();
-		this.face = memberRequestDto.face();
+		this.decoType = memberRequestDto.decoType();
+		this.faceType = memberRequestDto.faceType();
 		this.decoColor = memberRequestDto.decoColor();
-		this.faceColor = memberRequestDto.faceColor();
+		this.skinColor = memberRequestDto.skinColor();
 	}
 
 	public MemberDto toDto() {
 		return MemberDto.builder()
 			.memberId(getId())
 			.nickname(nickname)
-			.deco(deco)
-			.face(face)
+			.decoColor(decoType)
+			.faceType(faceType)
 			.decoColor(decoColor)
-			.faceColor(faceColor)
+			.skinColor(skinColor)
 			.build();
 	}
 

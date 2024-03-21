@@ -1,5 +1,7 @@
 package com.ssafy.lyricit.config;
 
+import static com.ssafy.lyricit.common.type.HeaderConstant.*;
+
 import java.util.Map;
 
 import org.springframework.messaging.Message;
@@ -30,7 +32,7 @@ public class ChannelInboundInterceptor implements ChannelInterceptor {
 
 	private void handleConnectCommand(StompHeaderAccessor header) {
 		Map<String, Object> attributes = header.getSessionAttributes();
-		String memberId = header.getFirstNativeHeader("memberId");
+		String memberId = header.getFirstNativeHeader(MEMBER_ID.getValue());
 
 		MemberRequestDto memberRequestDto = createMemberDto(header);
 
@@ -40,17 +42,17 @@ public class ChannelInboundInterceptor implements ChannelInterceptor {
 			memberId = memberService.login(memberId, memberRequestDto);
 		}
 
-		attributes.put("memberId", memberId);
+		attributes.put(MEMBER_ID.getValue(), memberId);
 		header.setSessionAttributes(attributes);
 	}
 
 	private MemberRequestDto createMemberDto(StompHeaderAccessor header) {
 		return MemberRequestDto.builder()
-			.nickname(header.getFirstNativeHeader("nickname"))
-			.deco(header.getFirstNativeHeader("deco"))
-			.face(header.getFirstNativeHeader("face"))
-			.decoColor(header.getFirstNativeHeader("decoColor"))
-			.faceColor(header.getFirstNativeHeader("faceColor"))
+			.nickname(header.getFirstNativeHeader(NICKNAME.getValue()))
+			.decoType(header.getFirstNativeHeader(DECO_TYPE.getValue()))
+			.faceType(header.getFirstNativeHeader(FACE_TYPE.getValue()))
+			.decoColor(header.getFirstNativeHeader(DECO_COLOR.getValue()))
+			.skinColor(header.getFirstNativeHeader(SKIN_COLOR.getValue()))
 			.build();
 	}
 }
