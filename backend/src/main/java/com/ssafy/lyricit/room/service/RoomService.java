@@ -74,8 +74,8 @@ public class RoomService {
 		}
 
 		// check password
-		if (!roomDto.getPassword().isBlank()) {
-			if (roomPasswordDto == null) {// password not given
+		if (!memberId.equals(roomDto.getLeaderId()) && !roomDto.getPassword().isBlank()) {
+			if (roomPasswordDto == null || roomPasswordDto.password().isBlank()) {// password not given
 				throw new BaseException(PASSWORD_REQUIRED);
 			} else if (!roomPasswordDto.password().equals(roomDto.getPassword())) {// password wrong
 				throw new BaseException(WRONG_PASSWORD);
@@ -124,6 +124,11 @@ public class RoomService {
 		if (roomDto.getPlayerCount() == 0) {
 			deleteRoom(roomNumber, roomDto);
 			return;
+		}
+
+		// leader change
+		if (roomDto.getLeaderId().equals(memberId)) { // if leader exited
+			roomDto.setLeaderId(roomDto.getMembers().get(0).getMember().memberId()); // next member get leader
 		}
 
 		publishRoom(false, roomNumber, roomDto, memberInGameDto);
