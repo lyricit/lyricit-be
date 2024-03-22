@@ -13,6 +13,7 @@ public record RoomInsideDto(
 	Long roundLimit,
 	Long roundTime,
 	Boolean isPublic,
+	String leaderId,
 	List<MemberInGameDto> members
 ) {
 }

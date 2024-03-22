@@ -27,6 +27,7 @@ public class RoomDto {
 	private Boolean isPublic;
 	private Long roundLimit;
 	private Long roundTime;
+	private String leaderId;
 	private List<MemberInGameDto> members;
 
 	public RoomInsideDto toInsideDto(String roomNumber) {
@@ -36,6 +37,7 @@ public class RoomDto {
 			.roundLimit(roundLimit)
 			.roundTime(roundTime)
 			.isPublic(isPublic)
+			.leaderId(leaderId)
 			.members(members)
 			.build();
 	}

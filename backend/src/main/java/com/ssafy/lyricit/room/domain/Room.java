@@ -56,6 +56,7 @@ public class Room extends BaseEntity {
 			.isPublic(password.isBlank())
 			.roundLimit(roundLimit)
 			.roundTime(roundTime)
+			.leaderId(member.getId())
 			.members(new ArrayList<>())
 			.build();
 	}
