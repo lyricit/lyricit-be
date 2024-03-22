@@ -29,7 +29,7 @@ public class MemberController {
 	@Operation(summary = "로그인 or 회원가입")
 	@PostMapping("/login")
 	public ResponseEntity<MemberIdDto> login(@RequestBody MemberRequestDto memberRequestDto) {
-		return ResponseEntity.ok(memberService.enterLounge(memberRequestDto));
+		return ResponseEntity.ok(memberService.authorize(memberRequestDto));
 	}
 
 	@Operation(summary = "회원정보 조회 (테스트)")
