@@ -25,7 +25,7 @@ public class MemberService {
 	private final MemberRepository memberRepository;
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
-	public MemberIdDto enterLounge(MemberRequestDto memberRequestDto) {
+	public MemberIdDto authorize(MemberRequestDto memberRequestDto) {
 		if (memberRepository.existsById(memberRequestDto.memberId())) {// login
 			Member member = memberRepository.findById(memberRequestDto.memberId())
 				.orElseThrow(() -> new BaseException(MEMBER_NOT_FOUND));
