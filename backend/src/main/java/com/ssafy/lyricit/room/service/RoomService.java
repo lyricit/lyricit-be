@@ -21,6 +21,7 @@ import com.ssafy.lyricit.member.dto.MemberInGameDto;
 import com.ssafy.lyricit.member.repository.MemberRepository;
 import com.ssafy.lyricit.room.domain.Room;
 import com.ssafy.lyricit.room.dto.RoomDto;
+import com.ssafy.lyricit.room.dto.RoomInsideDto;
 import com.ssafy.lyricit.room.dto.RoomOutsideDto;
 import com.ssafy.lyricit.room.dto.RoomPasswordDto;
 import com.ssafy.lyricit.room.dto.RoomRequestDto;
@@ -59,7 +60,7 @@ public class RoomService {
 		return roomNumber;
 	}
 
-	public void enterRoom(String memberId, String roomNumber, RoomPasswordDto roomPasswordDto) {
+	public RoomInsideDto enterRoom(String memberId, String roomNumber, RoomPasswordDto roomPasswordDto) {
 		// check redis key
 		if (Boolean.FALSE.equals(roomRedisTemplate.hasKey(roomNumber))) {
 			throw new BaseException(ROOM_NOT_FOUND);
@@ -96,6 +97,8 @@ public class RoomService {
 		roomDto.setPlayerCount(roomDto.getPlayerCount() + 1);
 
 		publishRoom(true, roomNumber, roomDto, memberInGameDto);
+
+		return roomDto.toInsideDto(roomNumber);
 	}
 
 	public void exitRoom(String memberId, String roomNumber) {

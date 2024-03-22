@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ssafy.lyricit.room.dto.RoomInsideDto;
 import com.ssafy.lyricit.room.dto.RoomOutsideDto;
 import com.ssafy.lyricit.room.dto.RoomPasswordDto;
 import com.ssafy.lyricit.room.dto.RoomRequestDto;
@@ -39,12 +40,11 @@ public class RoomController {
 
 	@Operation(summary = "방 입장")
 	@PostMapping("/{roomNumber}")
-	public ResponseEntity<Void> enterRoom(
+	public ResponseEntity<RoomInsideDto> enterRoom(
 		@RequestHeader String memberId,
 		@PathVariable String roomNumber,
 		@RequestBody(required = false) RoomPasswordDto roomPasswordDto) {
-		roomService.enterRoom(memberId, roomNumber, roomPasswordDto);
-		return ResponseEntity.ok().build();
+		return ResponseEntity.ok(roomService.enterRoom(memberId, roomNumber, roomPasswordDto));
 	}
 
 	@Operation(summary = "방 퇴장 (방의 인원이 0이 되면 방이 삭제됨)")
