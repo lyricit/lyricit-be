@@ -19,6 +19,11 @@ public enum ErrorCode {
 	PASSWORD_REQUIRED(401, "비밀번호가 필요합니다."),
 	WRONG_PASSWORD(401, "비밀번호가 틀렸습니다."),
 
+	// Game
+	GAME_ALREADY_PLAYING(409, "이미 게임이 진행 중입니다."),
+	NOT_LEADER(403, "방장이 아닙니다."),
+	NOT_ALL_READY(412, "전원이 레디 상태여야 게임 시작이 가능합니다."),
+
 
 	// === GLOBAL BASE ERROR CODE ===
 	// 4xx: Client Errors
