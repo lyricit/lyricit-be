@@ -1,6 +1,7 @@
 package com.ssafy.lyricit.common;
 
 import static com.ssafy.lyricit.common.type.EndPointConstant.*;
+import static com.ssafy.lyricit.common.type.EventType.*;
 
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
@@ -32,7 +33,8 @@ public class MessagePublisher {
 			GlobalEventResponse.builder()
 				.type(type)
 				.data(room)
-				.build());
+				.build()
+		);
 	}
 
 	public void publishMemberToRoom(String type, String roomNumber, Object member) {
@@ -40,14 +42,25 @@ public class MessagePublisher {
 			GlobalEventResponse.builder()
 				.type(type)
 				.data(member)
-				.build());
+				.build()
+		);
 	}
 
 	public void publishMessageToLounge(LoungeChatResponseDto response) {
-		template.convertAndSend(SUB_LOUNGE.getValue(), response);
+		template.convertAndSend(SUB_LOUNGE.getValue(),
+			GlobalEventResponse.builder()
+				.type(LOUNGE_MESSAGE.name())
+				.data(response)
+				.build()
+		);
 	}
 
 	public void publishMessageToRoom(RoomChatResponseDto response) {
-		template.convertAndSend(SUB_ROOM.getValue() + response.roomNumber(), response);
+		template.convertAndSend(SUB_ROOM.getValue() + response.roomNumber(),
+			GlobalEventResponse.builder()
+				.type(ROOM_MESSAGE.name())
+				.data(response)
+				.build()
+		);
 	}
 }
