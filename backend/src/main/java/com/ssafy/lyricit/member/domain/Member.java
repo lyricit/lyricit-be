@@ -60,7 +60,7 @@ public class Member extends BaseEntity {
 		return MemberDto.builder()
 			.memberId(getId())
 			.nickname(nickname)
-			.decoColor(decoType)
+			.decoType(decoType)
 			.faceType(faceType)
 			.decoColor(decoColor)
 			.skinColor(skinColor)
