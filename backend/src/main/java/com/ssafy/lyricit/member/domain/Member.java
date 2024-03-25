@@ -71,7 +71,6 @@ public class Member extends BaseEntity {
 		return MemberInGameDto.builder()
 			.member(toDto())
 			.isReady(false)
-			.score(0L)
 			.build();
 	}
 }

@@ -14,5 +14,4 @@ import lombok.Setter;
 public class MemberInGameDto {
 	private MemberDto member;
 	private Boolean isReady;
-	private Long score;
 }
