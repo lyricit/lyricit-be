@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.ssafy.lyricit.member.dto.MemberDto;
 import com.ssafy.lyricit.member.dto.MemberIdDto;
+import com.ssafy.lyricit.member.dto.MemberOnlineDto;
 import com.ssafy.lyricit.member.dto.MemberRequestDto;
 import com.ssafy.lyricit.member.service.MemberService;
 
@@ -30,6 +31,12 @@ public class MemberController {
 	@PostMapping("/login")
 	public ResponseEntity<MemberIdDto> login(@RequestBody MemberRequestDto memberRequestDto) {
 		return ResponseEntity.ok(memberService.authorize(memberRequestDto));
+	}
+
+	@Operation(summary = "접속 회원 리스트 조회")
+	@GetMapping("/online")
+	public ResponseEntity<List<MemberOnlineDto>> getOnlineMembers() {
+		return ResponseEntity.ok(memberService.findAllOnlineMembers());
 	}
 
 	@Operation(summary = "회원정보 조회 (테스트)")
