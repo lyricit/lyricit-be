@@ -87,7 +87,10 @@ public class ChannelInboundInterceptor implements ChannelInterceptor {
 						.build()
 					, false
 				));
+
+				return;
 			}
+
 			throw new BaseException(MEMBER_ID_NOT_FOUND);
 		}
 	}
