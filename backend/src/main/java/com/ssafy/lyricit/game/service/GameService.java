@@ -12,7 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.ssafy.lyricit.common.MessagePublisher;
 import com.ssafy.lyricit.exception.BaseException;
 import com.ssafy.lyricit.game.dto.GameDto;
-import com.ssafy.lyricit.game.dto.GameInfoDto;
 import com.ssafy.lyricit.room.dto.RoomDto;
 import com.ssafy.lyricit.room.dto.RoomOutsideDto;
 
@@ -74,8 +73,7 @@ public class GameService {
 		messagePublisher.publishRoomToLounge(ROOM_UPDATED.name(), roomOutsideDto);
 
 		// pub to room
-		GameInfoDto gameInfoDto = gameDto.toInfoDto();
-		messagePublisher.publishGameToRoom(GAME_STARTED.name(), roomNumber, gameInfoDto);
+		messagePublisher.publishGameToRoom(GAME_STARTED.name(), roomNumber);
 
 		log.info("\n [게임 시작] \n== redis 저장 ==\n [{}번 방]", roomNumber);
 

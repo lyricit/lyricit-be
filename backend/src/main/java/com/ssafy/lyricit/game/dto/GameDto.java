@@ -24,9 +24,4 @@ public class GameDto {
 	private Long answerCount;
 	private List<ScoreDto> members;
 
-	public GameInfoDto toInfoDto() {
-		return GameInfoDto.builder()
-			.members(members)
-			.build();
-	}
 }
