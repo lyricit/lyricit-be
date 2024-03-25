@@ -34,10 +34,12 @@ public class ChannelInboundInterceptor implements ChannelInterceptor {
 		if (StompCommand.CONNECT.equals(header.getCommand())) {
 			// add online member to redis template
 			String memberId = header.getFirstNativeHeader(MEMBER_ID.getValue());
-			String nickname = header.getFirstNativeHeader(NICKNAME.getValue());
-			if (memberId == null || memberId.isBlank() || nickname == null || nickname.isBlank()) {
-				throw new BaseException(HEADER_NOT_SATISFIED);
+			if (memberId == null || memberId.isBlank()) {
+				throw new BaseException(MEMBER_ID_NOT_FOUND);
 			}
+
+			String nickname = memberRepository.findById(memberId)
+				.orElseThrow(() -> new BaseException(MEMBER_NOT_FOUND)).getNickname();
 
 			memberRedisTemplate.opsForValue().set(memberId, nickname);
 
