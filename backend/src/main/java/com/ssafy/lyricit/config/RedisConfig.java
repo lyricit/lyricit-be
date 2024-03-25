@@ -17,6 +17,7 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import com.ssafy.lyricit.game.dto.GameDto;
+import com.ssafy.lyricit.member.dto.MemberOnlineDto;
 import com.ssafy.lyricit.room.dto.RoomDto;
 
 @Configuration
@@ -43,6 +44,16 @@ public class RedisConfig {
 		lettuceConnectionFactory.afterPropertiesSet();
 
 		return lettuceConnectionFactory;
+	}
+
+	// 회원 온라인 템플릿
+	@Bean
+	public RedisTemplate<String, String> memberRedisTemplate() {
+		RedisTemplate<String, String> redisTemplate = new RedisTemplate<>();
+		redisTemplate.setConnectionFactory(createLettuceConnectionFactory(MEMBER_DB_IDX.ordinal()));
+		redisTemplate.setKeySerializer(new StringRedisSerializer());
+		redisTemplate.setValueSerializer(new StringRedisSerializer());
+		return redisTemplate;
 	}
 
 	// 방 템플릿

@@ -9,13 +9,23 @@ import org.springframework.stereotype.Component;
 import com.ssafy.lyricit.chat.dto.LoungeChatResponseDto;
 import com.ssafy.lyricit.chat.dto.RoomChatRequestDto;
 import com.ssafy.lyricit.chat.dto.RoomChatResponseDto;
+import com.ssafy.lyricit.member.dto.MemberOnlineDto;
 
 import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
 public class MessagePublisher {
-	private final SimpMessagingTemplate template; // 특정 Broker로 메세지를 전달
+	private final SimpMessagingTemplate template;
+
+	public void publishOnlineMemberToLounge(MemberOnlineDto member, boolean isOnline) {
+		template.convertAndSend(SUB_LOUNGE.getValue(),
+			GlobalEventResponse.builder()
+				.type(isOnline ? ONLINE.name() : OFFLINE.name())
+				.data(member)
+				.build()
+		);
+	}
 
 	public void publishInOutMessageToRoom(boolean isIn, String roomNumber, String nickname) {
 		String endPoint = isIn ? PUB_ENTER.getValue() : PUB_EXIT.getValue();

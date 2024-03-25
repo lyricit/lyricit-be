@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.ssafy.lyricit.common.MessagePublisher;
 import com.ssafy.lyricit.exception.BaseException;
 import com.ssafy.lyricit.game.dto.GameDto;
+import com.ssafy.lyricit.member.dto.MemberInGameDto;
 import com.ssafy.lyricit.room.dto.RoomDto;
 import com.ssafy.lyricit.room.dto.RoomOutsideDto;
 
@@ -62,11 +63,11 @@ public class GameService {
 			.keyword("")
 			.answerCount(0L)
 			.members(roomDto.getMembers().stream()
-				.map(member -> member.toScoreDto())
+				.map(MemberInGameDto::toScoreDto)
 				.toList())
 			.build();
 
-	    gameRedisTemplate.opsForValue().set(roomNumber, gameDto);
+		gameRedisTemplate.opsForValue().set(roomNumber, gameDto);
 
 		// pub to lounge
 		RoomOutsideDto roomOutsideDto = roomDto.toOutsideDto(roomNumber);
