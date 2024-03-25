@@ -55,11 +55,13 @@ public class GameService {
 		roomRedisTemplate.opsForValue().set(roomNumber, roomDto);
 
 		// redis 에 저장
-		GameDto gameDto = new GameDto();
-		gameDto.setRoom(roomDto);
-		gameDto.setCurrentRound(0L);
-		gameDto.setKeyword("");
-		gameDto.setAnswerCount(0L);
+		GameDto gameDto = GameDto.builder()
+			.room(roomDto)
+			.currentRound(0L)
+			.keyword("")
+			.answerCount(0L)
+			.build();
+
 	    gameRedisTemplate.opsForValue().set(roomNumber, gameDto);
 
 		// pub to lounge

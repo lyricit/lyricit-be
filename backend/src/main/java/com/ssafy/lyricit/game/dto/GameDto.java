@@ -22,14 +22,6 @@ public class GameDto {
 	public GameInfoDto toInfoDto(String roomNumber) {
 		return GameInfoDto.builder()
 			.roomNumber(roomNumber)
-			.playerCount(room.getPlayerCount())
-			.playerLimit(room.getPlayerLimit())
-			.roundLimit(room.getRoundLimit())
-			.roundTime(room.getRoundTime())
-			.leaderId(room.getLeaderId())
-			.currentRound(currentRound)
-			.keyword(keyword)
-			.answerCount(answerCount)
 			.members(room.getMembers())
 			.build();
 	}
