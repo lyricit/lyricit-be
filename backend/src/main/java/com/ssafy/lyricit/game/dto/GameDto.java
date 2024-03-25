@@ -1,5 +1,7 @@
 package com.ssafy.lyricit.game.dto;
 
+import java.util.List;
+
 import com.ssafy.lyricit.room.dto.RoomDto;
 
 import lombok.AllArgsConstructor;
@@ -14,15 +16,17 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 public class GameDto {
-	private RoomDto room;
+	private Long playerCount;
+	private Long roundTime;
+	private Long roundLimit;
 	private Long currentRound;
 	private String keyword;
 	private Long answerCount;
+	private List<ScoreDto> members;
 
-	public GameInfoDto toInfoDto(String roomNumber) {
+	public GameInfoDto toInfoDto() {
 		return GameInfoDto.builder()
-			.roomNumber(roomNumber)
-			.members(room.getMembers())
+			.members(members)
 			.build();
 	}
 }

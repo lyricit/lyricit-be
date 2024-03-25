@@ -56,10 +56,15 @@ public class GameService {
 
 		// redis 에 저장
 		GameDto gameDto = GameDto.builder()
-			.room(roomDto)
+			.playerCount(roomDto.getPlayerCount())
+			.roundTime(roomDto.getRoundTime())
+			.roundLimit(roomDto.getRoundLimit())
 			.currentRound(0L)
 			.keyword("")
 			.answerCount(0L)
+			.members(roomDto.getMembers().stream()
+				.map(member -> member.toScoreDto())
+				.toList())
 			.build();
 
 	    gameRedisTemplate.opsForValue().set(roomNumber, gameDto);
@@ -69,7 +74,7 @@ public class GameService {
 		messagePublisher.publishRoomToLounge(ROOM_UPDATED.name(), roomOutsideDto);
 
 		// pub to room
-		GameInfoDto gameInfoDto = gameDto.toInfoDto(roomNumber);
+		GameInfoDto gameInfoDto = gameDto.toInfoDto();
 		messagePublisher.publishGameToRoom(GAME_STARTED.name(), roomNumber, gameInfoDto);
 
 		log.info("\n [게임 시작] \n== redis 저장 ==\n [{}번 방]", roomNumber);

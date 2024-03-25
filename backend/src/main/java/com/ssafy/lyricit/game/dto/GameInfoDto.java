@@ -8,6 +8,5 @@ import lombok.Builder;
 
 @Builder
 public record GameInfoDto(
-	String roomNumber,
-	List<MemberInGameDto> members
+	List<ScoreDto> members
 ) {}
