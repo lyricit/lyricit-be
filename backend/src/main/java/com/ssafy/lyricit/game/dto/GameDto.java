@@ -14,7 +14,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Builder(toBuilder = true)
 public class GameDto {
 	private Long playerCount;
 	private Long roundTime;
@@ -24,4 +24,10 @@ public class GameDto {
 	private Long answerCount;
 	private List<ScoreDto> members;
 
+	public GameRoundDto toRoundDto() {
+		return GameRoundDto.builder()
+			.currentRound(currentRound)
+			.keyword(keyword)
+			.build();
+	}
 }
