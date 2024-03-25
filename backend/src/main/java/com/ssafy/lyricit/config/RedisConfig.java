@@ -16,6 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
+import com.ssafy.lyricit.game.dto.GameDto;
 import com.ssafy.lyricit.room.dto.RoomDto;
 
 @Configuration
@@ -59,6 +60,27 @@ public class RedisConfig {
 		Jackson2JsonRedisSerializer<RoomDto> serializer = new Jackson2JsonRedisSerializer<>(RoomDto.class);
 		serializer.setObjectMapper(objectMapper);
 		redisTemplate.setValueSerializer(serializer);
+		return redisTemplate;
+	}
+
+	// 게임 템플릿
+	@Bean
+	public RedisTemplate<String, Object> gameRedisTemplate() {
+		RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
+		redisTemplate.setConnectionFactory(createLettuceConnectionFactory(GAME_DB_IDX.ordinal()));
+		redisTemplate.setKeySerializer(new StringRedisSerializer());
+
+		// Value serialization for game data
+		ObjectMapper objectMapper = new ObjectMapper();
+		objectMapper.registerModule(new JavaTimeModule());
+		objectMapper.registerModule(new Jdk8Module());
+		objectMapper.registerModule(new ParameterNamesModule());
+
+		// Value serialization settings
+		Jackson2JsonRedisSerializer<GameDto> serializer = new Jackson2JsonRedisSerializer<>(GameDto.class);
+		serializer.setObjectMapper(objectMapper);
+		redisTemplate.setValueSerializer(serializer);
+
 		return redisTemplate;
 	}
 }
