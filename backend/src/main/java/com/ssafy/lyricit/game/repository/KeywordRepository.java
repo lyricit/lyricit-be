@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import com.ssafy.lyricit.game.domain.Keyword;
 
 public interface KeywordRepository extends JpaRepository<Keyword, Long> {
-	@Query(nativeQuery = true, value = "SELECT * FROM keyword ORDER BY RAND() LIMIT 1")
+	@Query(nativeQuery = true, value = "SELECT * FROM keyword WHERE id >= RAND() * (SELECT MAX(id) FROM keyword) LIMIT 1")
 	Keyword findRandomKeyword();
 }
 
