@@ -74,6 +74,15 @@ public class MessagePublisher {
 		);
 	}
 
+	public void publishGameToRoom(String type, String roomNumber, Object gameInfo) {
+		template.convertAndSend(SUB_ROOM.getValue() + roomNumber,
+			GlobalEventResponse.builder()
+				.type(type)
+				.data(gameInfo)
+				.build()
+		);
+	}
+
 	public void publishGameToRoom(String type, String roomNumber) {
 		template.convertAndSend(SUB_ROOM.getValue() + roomNumber,
 			GlobalEventResponse.builder()
@@ -81,4 +90,5 @@ public class MessagePublisher {
 				.build()
 		);
 	}
+
 }
