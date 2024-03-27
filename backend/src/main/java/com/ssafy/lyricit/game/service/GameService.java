@@ -108,7 +108,8 @@ public class GameService {
 
 		Long roundTime = ((GameDto)gameRedisTemplate.opsForValue().get(roomNumber)).getRoundTime();
 
-		ScheduledFuture<?> newTask = scheduler.scheduleWithFixedDelay(() -> roundTask(roomNumber), 0, roundTime, TimeUnit.SECONDS);
+		ScheduledFuture<?> newTask = scheduler.scheduleWithFixedDelay(() -> proceedRound(roomNumber), 0, roundTime,
+			TimeUnit.SECONDS);
 		roundTasks.put(roomNumber, newTask);
 	}
 
@@ -118,14 +119,14 @@ public class GameService {
 	}
 
 	// 랜덤 키워드 하나 뽑아오는 메서드
-	public Keyword getRandomKeyword() {
+	private Keyword getRandomKeyword() {
 		long count = keywordRepository.count();
 		long randomIndex = new Random().nextLong(count);
 		return keywordRepository.findById(randomIndex).orElseThrow(() -> new BaseException(KEYWORD_NOT_FOUND));
 	}
 
 	// 라운드 개시 요청 시 실행되는 Task
-	public void roundTask(String roomNumber) {
+	private void proceedRound(String roomNumber) {
 		// 해당 게임 정보 가져오기
 		GameDto gameDto = (GameDto)gameRedisTemplate.opsForValue().get(roomNumber);
 
