@@ -1,12 +1,11 @@
 package com.ssafy.lyricit.game.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
 
 import com.ssafy.lyricit.game.domain.Keyword;
 
+@Repository
 public interface KeywordRepository extends JpaRepository<Keyword, Long> {
-	@Query(nativeQuery = true, value = "SELECT * FROM keyword WHERE id >= RAND() * (SELECT MAX(id) FROM keyword) LIMIT 1")
-	Keyword findRandomKeyword();
 }
 

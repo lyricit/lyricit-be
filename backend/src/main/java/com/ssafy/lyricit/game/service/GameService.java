@@ -3,6 +3,7 @@ package com.ssafy.lyricit.game.service;
 import static com.ssafy.lyricit.common.type.EventType.*;
 import static com.ssafy.lyricit.exception.ErrorCode.*;
 
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -88,7 +89,7 @@ public class GameService {
 		messagePublisher.publishRoomToLounge(ROOM_UPDATED.name(), roomOutsideDto);
 
 		// pub to room
-		messagePublisher.publishGameToRoom(GAME_STARTED.name(), roomNumber, null);
+		messagePublisher.publishGameToRoom(GAME_STARTED.name(), roomNumber);
 
 		log.info("\n [게임 시작] \n== redis 저장 ==\n [{}번 방]", roomNumber);
 
@@ -96,7 +97,6 @@ public class GameService {
 		startRound(roomNumber);
 
 	}
-
 
 	public void startRound(String roomNumber) {
 
@@ -106,43 +106,49 @@ public class GameService {
 			oldTask.cancel(true);
 		}
 
-		// 라운드 개시 Task (roundTime 마다 반복)
-		final Runnable startRoundTask = () -> {
-
-			// 해당 게임 정보 가져오기
-			GameDto gameDto = (GameDto)gameRedisTemplate.opsForValue().get(roomNumber);
-
-			// 최대 라운드 수에 도달했는지 확인
-			if (gameDto.getCurrentRound() >= gameDto.getRoundLimit()) {
-				// 게임 종료
-				log.info("\n [{}번 방 게임 종료] \n", roomNumber);
-				return;
-			}
-
-			// db 에서 랜덤 키워드 하나 뽑아오기
-			Keyword keyword = keywordRepository.findRandomKeyword();
-
-			// Redis 에 변경되는 정보 저장
-			gameDto = gameDto.toBuilder()
-				.currentRound(gameDto.getCurrentRound() + 1)
-				.keyword(keyword.getWord())
-				.answerCount(0L)
-				.build();
-			gameRedisTemplate.opsForValue().set(roomNumber, gameDto);
-
-			// pub to room
-			GameRoundDto gameRoundDto = gameDto.toRoundDto();
-			messagePublisher.publishGameToRoom(ROUND_STARTED.name(), roomNumber, gameRoundDto);
-		};
-
 		Long roundTime = ((GameDto)gameRedisTemplate.opsForValue().get(roomNumber)).getRoundTime();
-		ScheduledFuture<?> newTask = scheduler.scheduleWithFixedDelay(startRoundTask, 0, roundTime, TimeUnit.SECONDS);
+
+		ScheduledFuture<?> newTask = scheduler.scheduleWithFixedDelay(() -> roundTask(roomNumber), 0, roundTime, TimeUnit.SECONDS);
 		roundTasks.put(roomNumber, newTask);
 	}
-
 
 	// 모든 인원이 레디 상태인지 확인하기 위한 메서드
 	private boolean checkAllReady(RoomDto roomDto) {
 		return roomDto.getMembers().stream().allMatch(MemberInGameDto::getIsReady);
+	}
+
+	// 랜덤 키워드 하나 뽑아오는 메서드
+	public Keyword getRandomKeyword() {
+		long count = keywordRepository.count();
+		long randomIndex = new Random().nextLong(count);
+		return keywordRepository.findById(randomIndex).orElseThrow(() -> new BaseException(KEYWORD_NOT_FOUND));
+	}
+
+	// 라운드 개시 요청 시 실행되는 Task
+	public void roundTask(String roomNumber) {
+		// 해당 게임 정보 가져오기
+		GameDto gameDto = (GameDto)gameRedisTemplate.opsForValue().get(roomNumber);
+
+		// 최대 라운드 수에 도달했는지 확인
+		if (gameDto.getCurrentRound() >= gameDto.getRoundLimit()) {
+			// 게임 종료
+			log.info("\n [{}번 방 게임 종료] \n", roomNumber);
+			return;
+		}
+
+		// db 에서 랜덤 키워드 하나 뽑아오기
+		Keyword keyword = getRandomKeyword();
+
+		// Redis 에 변경되는 정보 저장
+		gameDto = gameDto.toBuilder()
+			.currentRound(gameDto.getCurrentRound() + 1)
+			.keyword(keyword.getWord())
+			.answerCount(0L)
+			.build();
+		gameRedisTemplate.opsForValue().set(roomNumber, gameDto);
+
+		// pub to room
+		GameRoundDto gameRoundDto = gameDto.toRoundDto();
+		messagePublisher.publishGameToRoom(ROUND_STARTED.name(), roomNumber, gameRoundDto);
 	}
 }
