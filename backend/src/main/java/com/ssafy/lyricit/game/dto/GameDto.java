@@ -19,7 +19,8 @@ public class GameDto {
 	private Long roundLimit;
 	private Long currentRound;
 	private String keyword;
-	private Long answerCount;
+	private HighlightDto highlightInfo;
+	private List<String> correctMembers;
 	private List<ScoreDto> members;
 
 	public GameRoundDto toRoundDto() {
@@ -28,4 +29,5 @@ public class GameDto {
 			.keyword(keyword)
 			.build();
 	}
+
 }
