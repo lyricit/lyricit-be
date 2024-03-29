@@ -3,6 +3,7 @@ package com.ssafy.lyricit.game.service;
 import static com.ssafy.lyricit.common.type.EventType.*;
 import static com.ssafy.lyricit.exception.ErrorCode.*;
 
+import java.util.ArrayList;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -21,6 +22,7 @@ import com.ssafy.lyricit.exception.BaseException;
 import com.ssafy.lyricit.game.domain.Keyword;
 import com.ssafy.lyricit.game.dto.GameDto;
 import com.ssafy.lyricit.game.dto.GameRoundDto;
+import com.ssafy.lyricit.game.dto.HighlightDto;
 import com.ssafy.lyricit.game.repository.KeywordRepository;
 import com.ssafy.lyricit.member.dto.MemberInGameDto;
 import com.ssafy.lyricit.room.dto.RoomDto;
@@ -69,14 +71,22 @@ public class GameService {
 		roomDto.setIsPlaying(true);
 		roomRedisTemplate.opsForValue().set(roomNumber, roomDto);
 
+
 		// redis 에 저장
+		HighlightDto initialHighlightInfo = HighlightDto.builder()
+			.memberId("")
+			.lyric("")
+			.title("")
+			.build();
+
 		GameDto gameDto = GameDto.builder()
 			.playerCount(roomDto.getPlayerCount())
 			.roundTime(roomDto.getRoundTime())
 			.roundLimit(roomDto.getRoundLimit())
 			.currentRound(0L)
 			.keyword("")
-			.answerCount(0L)
+			.correctMembers(new ArrayList<>())
+			.highlightInfo(initialHighlightInfo)
 			.members(roomDto.getMembers().stream()
 				.map(MemberInGameDto::toScoreDto)
 				.toList())
@@ -144,7 +154,7 @@ public class GameService {
 		gameDto = gameDto.toBuilder()
 			.currentRound(gameDto.getCurrentRound() + 1)
 			.keyword(keyword.getWord())
-			.answerCount(0L)
+			.correctMembers(new ArrayList<>())
 			.build();
 		gameRedisTemplate.opsForValue().set(roomNumber, gameDto);
 
