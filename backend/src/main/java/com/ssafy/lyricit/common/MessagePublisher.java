@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import com.ssafy.lyricit.chat.dto.LoungeChatResponseDto;
 import com.ssafy.lyricit.chat.dto.RoomChatRequestDto;
 import com.ssafy.lyricit.chat.dto.RoomChatResponseDto;
+import com.ssafy.lyricit.game.dto.GameChatResponseDto;
 import com.ssafy.lyricit.member.dto.MemberOnlineDto;
 
 import lombok.RequiredArgsConstructor;
@@ -87,6 +88,15 @@ public class MessagePublisher {
 		template.convertAndSend(SUB_ROOM.getValue() + roomNumber,
 			GlobalEventResponse.builder()
 				.type(type)
+				.build()
+		);
+	}
+
+	public void publishMessageToGame(String roomNumber, GameChatResponseDto response) {
+		template.convertAndSend(SUB_ROOM.getValue() + roomNumber,
+			GlobalEventResponse.builder()
+				.type(GAME_MESSAGE.name())
+				.data(response)
 				.build()
 		);
 	}
