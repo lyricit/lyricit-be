@@ -14,8 +14,10 @@ import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
+import com.ssafy.lyricit.config.events.DisconnectionEvent;
 import com.ssafy.lyricit.config.events.LoungeEvent;
 import com.ssafy.lyricit.config.events.RoomEvent;
 import com.ssafy.lyricit.exception.BaseException;
@@ -49,7 +51,7 @@ public class ChannelInboundInterceptor implements ChannelInterceptor {
 	public void afterSendCompletion(Message<?> message, MessageChannel channel, boolean sent, Exception ex) {
 		StompHeaderAccessor header = StompHeaderAccessor.wrap(message);
 		if (StompCommand.DISCONNECT.equals(header.getCommand())) {
-			disconnect(header);
+			eventPublisher.publishEvent(new DisconnectionEvent(this, header));
 		} else if (StompCommand.UNSUBSCRIBE.equals(header.getCommand())) {
 			// if already disconnected
 			if (header.getSessionAttributes().get(MEMBER_ID.getValue()) == null) {
@@ -94,19 +96,12 @@ public class ChannelInboundInterceptor implements ChannelInterceptor {
 		}
 
 		attributes.put(MEMBER_ID.getValue(), memberId);
-
-		// if roomNumber doesn't exist -> login connection
-		if (attributes.containsKey(ROOM_NUMBER.getValue())) {
-			attributes.put(ROOM_NUMBER.getValue(), LOUNGE);
-			header.setSessionAttributes(attributes);
-			return;
-		}
-		// if exist -> refresh connection
 		String destination = header.getDestination();
 		if (destination == null) {
-			throw new BaseException(DESTINATION_NOT_FOUND);
+			attributes.put(ROOM_NUMBER.getValue(), LOUNGE);
+		} else {
+			attributes.put(ROOM_NUMBER.getValue(), destination.substring(destination.lastIndexOf('/') + 1));
 		}
-		attributes.put(ROOM_NUMBER.getValue(), destination.substring(destination.lastIndexOf('/') + 1));
 		header.setSessionAttributes(attributes);
 	}
 
@@ -127,7 +122,8 @@ public class ChannelInboundInterceptor implements ChannelInterceptor {
 		log.info("\nmemberId: {}, roomNumber: {} subscribed!", memberId, path);
 	}
 
-	private void disconnect(StompHeaderAccessor header) {
+	@Async
+	public void disconnect(StompHeaderAccessor header) {
 		// remove online member from redis template
 		String memberId = header.getSessionAttributes().get(MEMBER_ID.getValue()).toString();
 		String roomNumber = header.getSessionAttributes().get(ROOM_NUMBER.getValue()).toString();

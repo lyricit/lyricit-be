@@ -102,6 +102,9 @@ public class RoomService {
 	}
 
 	public void exitRoom(String memberId, String roomNumber) {
+		if (roomNumber.equals("0")) {
+			return;
+		}
 		// check redis key
 		if (Boolean.FALSE.equals(roomRedisTemplate.hasKey(roomNumber))) {
 			throw new BaseException(ROOM_NOT_FOUND);
