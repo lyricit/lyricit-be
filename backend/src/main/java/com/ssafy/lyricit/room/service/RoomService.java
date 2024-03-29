@@ -133,6 +133,8 @@ public class RoomService {
 		// leader change
 		if (roomDto.getLeaderId().equals(memberId)) { // if leader exited
 			roomDto.setLeaderId(roomDto.getMembers().get(0).getMember().memberId()); // next member get leader
+			// isReady false for leader
+			roomDto.getMembers().get(0).setIsReady(false);
 			isLeaderChanged = true;
 		}
 
@@ -168,6 +170,10 @@ public class RoomService {
 		messagePublisher.publishInOutMessageToRoom(isIn, roomNumber, memberInGameDto.getMember().nickname());
 
 		if (isLeaderChanged) {
+			if (roomDto.getMembers().get(0).getIsReady()) {
+				ready(roomDto.getLeaderId(), roomNumber);
+			}
+
 			messagePublisher.publishLeaderChangedToRoom(roomNumber, roomDto.getLeaderId());
 		}
 	}
