@@ -96,7 +96,7 @@ public class RoomService {
 		roomDto.getMembers().add(memberInGameDto);
 		roomDto.setPlayerCount(roomDto.getPlayerCount() + 1);
 
-		publishRoom(true, roomNumber, roomDto, memberInGameDto);
+		publishRoom(true, roomNumber, roomDto, memberInGameDto, false);
 
 		return roomDto.toInsideDto(roomNumber);
 	}
@@ -129,12 +129,14 @@ public class RoomService {
 			return;
 		}
 
+		boolean isLeaderChanged = false;
 		// leader change
 		if (roomDto.getLeaderId().equals(memberId)) { // if leader exited
 			roomDto.setLeaderId(roomDto.getMembers().get(0).getMember().memberId()); // next member get leader
+			isLeaderChanged = true;
 		}
 
-		publishRoom(false, roomNumber, roomDto, memberInGameDto);
+		publishRoom(false, roomNumber, roomDto, memberInGameDto, isLeaderChanged);
 	}
 
 	private void deleteRoom(String roomNumber, RoomDto roomDto) {
@@ -148,7 +150,8 @@ public class RoomService {
 		log.info("\n [방 삭제 완료] \n {}", roomNumber);
 	}
 
-	private void publishRoom(boolean isIn, String roomNumber, RoomDto roomDto, MemberInGameDto memberInGameDto) {
+	private void publishRoom(boolean isIn, String roomNumber, RoomDto roomDto, MemberInGameDto memberInGameDto,
+		boolean isLeaderChanged) {
 		String type = isIn ? MEMBER_IN.name() : MEMBER_OUT.name();
 
 		roomRedisTemplate.opsForValue().set(roomNumber, roomDto);// update
@@ -163,6 +166,10 @@ public class RoomService {
 		messagePublisher.publishRoomToLounge(ROOM_UPDATED.name(), roomDto.toOutsideDto(roomNumber));
 		messagePublisher.publishMemberToRoom(type, roomNumber, memberInGameDto);
 		messagePublisher.publishInOutMessageToRoom(isIn, roomNumber, memberInGameDto.getMember().nickname());
+
+		if (isLeaderChanged) {
+			messagePublisher.publishLeaderChangedToRoom(roomNumber, roomDto.getLeaderId());
+		}
 	}
 
 	public void ready(String memberId, String roomNumber) {
