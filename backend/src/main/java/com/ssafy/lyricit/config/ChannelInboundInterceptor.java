@@ -5,6 +5,8 @@ import static com.ssafy.lyricit.exception.ErrorCode.*;
 
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.messaging.Message;
@@ -29,6 +31,7 @@ public class ChannelInboundInterceptor implements ChannelInterceptor {
 	private final RedisTemplate<String, String> memberRedisTemplate;
 	private final ApplicationEventPublisher eventPublisher;
 	private final String LOUNGE_STR = "lounge", LOUNGE = "0";
+	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
 	@Override
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
@@ -79,6 +82,7 @@ public class ChannelInboundInterceptor implements ChannelInterceptor {
 				.build()
 			, true
 		));
+		log.info("\nmemberId: {} connected to lounge!", memberId);
 	}
 
 	private void handleConnectCommand(StompHeaderAccessor header) {
@@ -90,7 +94,19 @@ public class ChannelInboundInterceptor implements ChannelInterceptor {
 		}
 
 		attributes.put(MEMBER_ID.getValue(), memberId);
-		attributes.put(ROOM_NUMBER.getValue(), LOUNGE);
+
+		// if roomNumber doesn't exist -> login connection
+		if (attributes.containsKey(ROOM_NUMBER.getValue())) {
+			attributes.put(ROOM_NUMBER.getValue(), LOUNGE);
+			header.setSessionAttributes(attributes);
+			return;
+		}
+		// if exist -> refresh connection
+		String destination = header.getDestination();
+		if (destination == null) {
+			throw new BaseException(DESTINATION_NOT_FOUND);
+		}
+		attributes.put(ROOM_NUMBER.getValue(), destination.substring(destination.lastIndexOf('/') + 1));
 		header.setSessionAttributes(attributes);
 	}
 
@@ -108,25 +124,24 @@ public class ChannelInboundInterceptor implements ChannelInterceptor {
 
 		// set roomNumber
 		header.getSessionAttributes().put(ROOM_NUMBER.getValue(), path.equals(LOUNGE_STR) ? LOUNGE : path);
+		log.info("\nmemberId: {}, roomNumber: {} subscribed!", memberId, path);
 	}
 
 	private void disconnect(StompHeaderAccessor header) {
 		// remove online member from redis template
 		String memberId = header.getSessionAttributes().get(MEMBER_ID.getValue()).toString();
-		String destination = header.getDestination();
-		if (destination == null) {
-			throw new BaseException(DESTINATION_NOT_FOUND);
-		}
-		String path = destination.substring(destination.lastIndexOf('/') + 1);
+		String roomNumber = header.getSessionAttributes().get(ROOM_NUMBER.getValue()).toString();
 
 		if (memberId == null || memberId.isBlank() || Boolean.FALSE.equals(memberRedisTemplate.hasKey(memberId))) {
 			throw new BaseException(MEMBER_ID_NOT_FOUND);
 		}
 
 		// if room member disconnect
-		if (!path.equals(LOUNGE_STR)) {
-			// publish room status
-			eventPublisher.publishEvent(new RoomEvent(this, memberId, path)); // todo: check if roomNumber is correct
+		if (!roomNumber.equals(LOUNGE_STR)) {
+			// exit from room
+			eventPublisher.publishEvent(
+				new RoomEvent(this, memberId, roomNumber)); // todo: check if roomNumber is correct
+			log.info("\nmemberId: {}, roomNumber: {} disconnected from room!", memberId, roomNumber);
 		}
 
 		// to lounge
@@ -142,6 +157,7 @@ public class ChannelInboundInterceptor implements ChannelInterceptor {
 				.build()
 			, false
 		));
+		log.info("\nmemberId: {} disconnected from lounge!", memberId);
 	}
 
 	private void unsubscribe(StompHeaderAccessor header) {
@@ -153,5 +169,6 @@ public class ChannelInboundInterceptor implements ChannelInterceptor {
 
 		// publish room status to lounge
 		eventPublisher.publishEvent(new RoomEvent(this, memberId, roomNumber));
+		log.info("\nmemberId: {}, roomNumber: {} unsubscribed!", memberId, roomNumber);
 	}
 }
