@@ -41,7 +41,7 @@ public class GameService {
 	private final MessagePublisher messagePublisher;
 	private final KeywordRepository keywordRepository;
 
-	// 스케줄링을 위한 ExecutorService
+	// 라운드 스케줄링을 위한 ExecutorService
 	private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(10);
 	private final ConcurrentHashMap<String, ScheduledFuture<?>> roundTasks = new ConcurrentHashMap<>();
 
@@ -106,6 +106,7 @@ public class GameService {
 		scheduler.schedule(() -> startRound(roomNumber), 2, TimeUnit.SECONDS);
 	}
 
+	// 모든 라운드가 끝나면 호출되는 게임종료 메서드
 	public void endGame(String roomNumber) {
 		// 해당 게임 정보 가져오기
 		GameDto gameDto = (GameDto)gameRedisTemplate.opsForValue().get(roomNumber);

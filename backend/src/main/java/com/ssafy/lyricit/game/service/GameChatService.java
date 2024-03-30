@@ -44,13 +44,18 @@ public class GameChatService {
 	private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(10);
 	private final ConcurrentHashMap<String, ScheduledFuture<?>> highlightTasks = new ConcurrentHashMap<>();
 
-
+	// ElasticSearch 변수
 	@Value("${ELASTICSEARCH_URL}")
 	private String url;
-
 	@Value("${ELASTICSEARCH_API_KEY}")
 	private String apiKey;
 
+	// 게임 내 채팅 메세지 확인하는 메서드
+	// 먼저 해당 방이 하이라이트 상태인지 확인
+	// 만약 해당 방이 하이라이트 상태가 아니라면 handleLyric 메서드 호출
+	// 해당 방이 하이라이트 상태라면, 해당 메시지를 보낸 유저가 하이라이트 대상 멤버인지 확인
+	// 하이라이트 대상 멤버가 아니라면 그냥 채팅방에 뿌리기
+	// 하이라이트 대상 멤버라면, 제목을 아직 치지 않은 경우 handleTitle 메서드를, 가수만 남은 상태라면 checkAnswer 메서드를 호출
 	public void checkGameChatMessage(GameChatDto chatRequest) {
 		// request 변수
 		String roomNumber = chatRequest.getRoomNumber();
@@ -79,6 +84,10 @@ public class GameChatService {
 		}
 	}
 
+	// 해당 채팅 메세지가 하이라이트 대상인지 확인하는 메서드
+	// 전달받은 채팅을 Elastic Search 에 검색하여,
+	// 검색결과가 아예 없는 경우에는 그냥 채팅 메세지로 처리하고,
+	// 검색결과가 나오는 경우에는, 하이라이트 상태로 전환하게 됨
 	private void handleLyric(GameChatDto chatRequest) {
 		String roomNumber = chatRequest.getRoomNumber();
 		String memberId = chatRequest.getMemberId();
@@ -124,7 +133,7 @@ public class GameChatService {
 			HighlightNoticeDto highlightNoticeDto = highlightInfo.toHighlightNoticeDto();
 			messagePublisher.publishGameToRoom(HIGHLIGHT.name(), roomNumber, highlightNoticeDto);
 
-			// 하이라이트 시간제한 스케줄링
+			// 하이라이트 시간제한 스케줄링 (15초 이내에 정답을 맞추지 못하면 오답처리)
 			ScheduledFuture<?> highlightTask = scheduler.schedule(() -> handleIncorrectAnswer(roomNumber, memberId), 15L,
 				TimeUnit.SECONDS);
 
@@ -132,6 +141,8 @@ public class GameChatService {
 		}
 	}
 
+	// 하이라이트 상태에서 제목을 입력받았을 때 실행되는 메서드
+	// 해당 제목을 redis 에 갱신하고, 입력받았던 제목을 방에 pub
 	private void handleTitle(GameChatDto chatRequest) {
 
 		String roomNumber = chatRequest.getRoomNumber();
@@ -156,6 +167,9 @@ public class GameChatService {
 		messagePublisher.publishGameToRoom(HIGHLIGHT_TITLE.name(), roomNumber, chatRequest.getContent());
 	}
 
+	// 최종적으로 정답인지 확인하는 메서드
+	// 가사 + 제목 + 가수 가 일치하는 곡이 있는 지 확인 -> Elastic Search 에서 검색
+	// 검색결과가 없으면 오답처리, 있으면 정답처리
 	private void checkAnswer(GameChatDto chatRequest) {
 
 		String roomNumber = chatRequest.getRoomNumber();
@@ -190,12 +204,15 @@ public class GameChatService {
 		}
 	}
 
+	// 방에 게임 채팅 뿌리는 메서드
 	private void sendGameChatMessage(GameChatDto chatRequest) {
 		GameChatResponseDto response = chatRequest.toGameChatResponseDto();
 
 		messagePublisher.publishMessageToGame(chatRequest.getRoomNumber(), response);
 	}
 
+	// 오답 처리 진행하는 메서드
+	// 방에 오답 알림 pub 하고 2초 후 하이라이트 취소 메서드 호출
 	private void handleIncorrectAnswer(String roomNumber, String memberId) {
 		// 하이라이트 시간제한 스케줄링 취소
 		cancelHighlightTask(roomNumber);
@@ -217,6 +234,10 @@ public class GameChatService {
 		scheduler.schedule(() -> cancelHighlight(roomNumber), 2, TimeUnit.SECONDS);
 	}
 
+	// 정답 맟췄을 시 진행하는 메서드
+	// 해당 멤버 점수정보 및 정답자 목록을 갱신하고, 정답알림을 방에 pub함
+	// 만약, 해당 방에 모든 사람이 정답을 맞췄다면, 다음 라운드로 넘어가는 메서드 호출
+	// 그렇지 않다면, 2초 후 하이라이트 취소 메서드 호출
 	private void handleCorrectAnswer(String roomNumber, String memberId) {
 		// 하이라이트 시간제한 스케줄링 취소
 		cancelHighlightTask(roomNumber);
@@ -270,6 +291,7 @@ public class GameChatService {
 
 	}
 
+	// 하이라이트 시간제한 스케줄링을 취소하는 메서드
 	public void cancelHighlightTask(String roomNumber) {
 		ScheduledFuture<?> oldTask = highlightTasks.get(roomNumber);
 		if (oldTask != null && !oldTask.isCancelled()) {
@@ -277,6 +299,8 @@ public class GameChatService {
 		}
 	}
 
+	// 하이라이트 상태 취소하는 메서드
+	// 하이라이트 정보를 초기화 하고 방에 알림 pub
 	private void cancelHighlight(String roomNumber) {
 		// 게임 불러오기
 		GameDto gameDto = (GameDto)gameRedisTemplate.opsForValue().get(roomNumber);
