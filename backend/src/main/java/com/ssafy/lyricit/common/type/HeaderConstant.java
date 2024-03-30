@@ -11,7 +11,8 @@ public enum HeaderConstant {
 	DECO_TYPE("decoType"),
 	FACE_TYPE("faceType"),
 	DECO_COLOR("decoColor"),
-	SKIN_COLOR("skinColor");
+	SKIN_COLOR("skinColor"),
+	ROOM_NUMBER("roomNumber"),;
 
 	private final String value;
 }

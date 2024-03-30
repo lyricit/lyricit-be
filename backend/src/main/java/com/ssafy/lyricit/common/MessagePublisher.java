@@ -57,6 +57,15 @@ public class MessagePublisher {
 		);
 	}
 
+	public void publishLeaderChangedToRoom(String roomNumber, String leaderId) {
+		template.convertAndSend(SUB_ROOM.getValue() + roomNumber,
+			GlobalEventResponse.builder()
+				.type(LEADER_CHANGED.name())
+				.data(leaderId)
+				.build()
+		);
+	}
+
 	public void publishMessageToLounge(LoungeChatResponseDto response) {
 		template.convertAndSend(SUB_LOUNGE.getValue(),
 			GlobalEventResponse.builder()

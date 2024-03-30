@@ -6,6 +6,9 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Getter
 public enum ErrorCode {
+	// Websocket
+	DESTINATION_NOT_FOUND(404, "목적지를 찾을 수 없습니다."),
+
 	// Member
 	MEMBER_NOT_FOUND(404, "회원를 찾을 수 없습니다."),
 	MEMBER_ALREADY_EXIST(409, "이미 존재하는 회원입니다."),
