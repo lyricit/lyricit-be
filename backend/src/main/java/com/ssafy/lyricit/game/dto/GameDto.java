@@ -29,5 +29,4 @@ public class GameDto {
 			.keyword(keyword)
 			.build();
 	}
-
 }

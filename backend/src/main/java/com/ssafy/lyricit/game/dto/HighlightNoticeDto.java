@@ -5,6 +5,7 @@ import lombok.Builder;
 @Builder
 public record HighlightNoticeDto(
 	String memberId,
-	String lyric
+	String lyric,
+	Long timeLimit
 ) {
 }

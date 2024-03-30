@@ -20,6 +20,7 @@ public class HighlightDto {
 		return HighlightNoticeDto.builder()
 			.memberId(memberId)
 			.lyric(lyric)
+			.timeLimit(15L)
 			.build();
 	}
 }
