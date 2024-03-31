@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 import com.ssafy.lyricit.chat.dto.LoungeChatResponseDto;
 import com.ssafy.lyricit.chat.dto.RoomChatRequestDto;
 import com.ssafy.lyricit.chat.dto.RoomChatResponseDto;
-import com.ssafy.lyricit.game.dto.GameChatResponseDto;
+import com.ssafy.lyricit.chat.dto.GameChatResponseDto;
 import com.ssafy.lyricit.member.dto.MemberOnlineDto;
 
 import lombok.RequiredArgsConstructor;

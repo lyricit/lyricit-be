@@ -1,4 +1,4 @@
-package com.ssafy.lyricit.game.dto;
+package com.ssafy.lyricit.chat.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,7 +11,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class GameChatDto {
+public class GameChatRequestDto {
 	private String roomNumber;
 	private String memberId;
 	private String nickname;

@@ -21,8 +21,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 import com.ssafy.lyricit.common.MessagePublisher;
 import com.ssafy.lyricit.game.dto.CorrectAnswerDto;
 import com.ssafy.lyricit.game.dto.ElasticSearchResponseDto;
-import com.ssafy.lyricit.game.dto.GameChatDto;
-import com.ssafy.lyricit.game.dto.GameChatResponseDto;
+import com.ssafy.lyricit.chat.dto.GameChatRequestDto;
+import com.ssafy.lyricit.chat.dto.GameChatResponseDto;
 import com.ssafy.lyricit.game.dto.GameDto;
 import com.ssafy.lyricit.game.dto.HighlightDto;
 import com.ssafy.lyricit.game.dto.HighlightNoticeDto;
@@ -58,7 +58,7 @@ public class GameChatService {
 	// 해당 방이 하이라이트 상태라면, 해당 메시지를 보낸 유저가 하이라이트 대상 멤버인지 확인
 	// 하이라이트 대상 멤버가 아니라면 그냥 채팅방에 뿌리기
 	// 하이라이트 대상 멤버라면, 제목을 아직 치지 않은 경우 handleTitle 메서드를, 가수만 남은 상태라면 checkAnswer 메서드를 호출
-	public void checkGameChatMessage(GameChatDto chatRequest) throws SchedulerException {
+	public void checkGameChatMessage(GameChatRequestDto chatRequest) throws SchedulerException {
 		// request 변수
 		String roomNumber = chatRequest.getRoomNumber();
 		String memberId = chatRequest.getMemberId();
@@ -90,7 +90,7 @@ public class GameChatService {
 	// 전달받은 채팅을 Elastic Search 에 검색하여,
 	// 검색결과가 아예 없는 경우에는 그냥 채팅 메세지로 처리하고,
 	// 검색결과가 나오는 경우에는, 하이라이트 상태로 전환하게 됨
-	private void handleLyric(GameChatDto chatRequest) {
+	private void handleLyric(GameChatRequestDto chatRequest) {
 		String roomNumber = chatRequest.getRoomNumber();
 		String memberId = chatRequest.getMemberId();
 		String content = chatRequest.getContent();
@@ -145,7 +145,7 @@ public class GameChatService {
 
 	// 하이라이트 상태에서 제목을 입력받았을 때 실행되는 메서드
 	// 해당 제목을 redis 에 갱신하고, 입력받았던 제목을 방에 pub
-	private void handleTitle(GameChatDto chatRequest) {
+	private void handleTitle(GameChatRequestDto chatRequest) {
 
 		String roomNumber = chatRequest.getRoomNumber();
 
@@ -172,7 +172,7 @@ public class GameChatService {
 	// 최종적으로 정답인지 확인하는 메서드
 	// 가사 + 제목 + 가수 가 일치하는 곡이 있는 지 확인 -> Elastic Search 에서 검색
 	// 검색결과가 없으면 오답처리, 있으면 정답처리
-	private void checkAnswer(GameChatDto chatRequest) throws SchedulerException {
+	private void checkAnswer(GameChatRequestDto chatRequest) throws SchedulerException {
 
 		String roomNumber = chatRequest.getRoomNumber();
 		String memberId = chatRequest.getMemberId();
@@ -207,7 +207,7 @@ public class GameChatService {
 	}
 
 	// 방에 게임 채팅 뿌리는 메서드
-	private void sendGameChatMessage(GameChatDto chatRequest) {
+	private void sendGameChatMessage(GameChatRequestDto chatRequest) {
 		GameChatResponseDto response = chatRequest.toGameChatResponseDto();
 
 		messagePublisher.publishMessageToGame(chatRequest.getRoomNumber(), response);

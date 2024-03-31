@@ -7,7 +7,7 @@ import org.springframework.stereotype.Controller;
 import com.ssafy.lyricit.chat.dto.LoungeChatRequestDto;
 import com.ssafy.lyricit.chat.dto.RoomChatRequestDto;
 import com.ssafy.lyricit.chat.service.ChatService;
-import com.ssafy.lyricit.game.dto.GameChatDto;
+import com.ssafy.lyricit.chat.dto.GameChatRequestDto;
 import com.ssafy.lyricit.game.service.GameChatService;
 import com.ssafy.lyricit.member.aspect.MemberIdCheck;
 
@@ -44,7 +44,7 @@ public class ChatController {
 	}
 
 	@MessageMapping("/chat/game")
-	public void chatToGame(GameChatDto chatRequest) throws SchedulerException {
+	public void chatToGame(GameChatRequestDto chatRequest) throws SchedulerException {
 		gameChatService.checkGameChatMessage(chatRequest);
 	}
 }
