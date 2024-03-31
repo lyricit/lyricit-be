@@ -17,7 +17,6 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import com.ssafy.lyricit.game.dto.GameDto;
-import com.ssafy.lyricit.round.dto.RoundDto;
 import com.ssafy.lyricit.room.dto.RoomDto;
 
 @Configuration
@@ -76,10 +75,5 @@ public class RedisConfig {
 	@Bean
 	public RedisTemplate<String, GameDto> gameRedisTemplate() {
 		return createRedisTemplate(GAME_DB_IDX.ordinal(), GameDto.class);
-	}
-
-	@Bean
-	public RedisTemplate<String, RoundDto> roundRedisTemplate() {
-		return createRedisTemplate(ROUND_DB_IDX.ordinal(), RoundDto.class);
 	}
 }
