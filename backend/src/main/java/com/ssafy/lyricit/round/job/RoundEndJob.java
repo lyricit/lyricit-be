@@ -1,6 +1,6 @@
 package com.ssafy.lyricit.round.job;
 
-import static com.ssafy.lyricit.game.type.JobNameConstant.*;
+import static com.ssafy.lyricit.game.constant.JobName.*;
 
 import org.quartz.Job;
 import org.quartz.JobDataMap;
