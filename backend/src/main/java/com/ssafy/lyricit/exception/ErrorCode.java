@@ -23,6 +23,7 @@ public enum ErrorCode {
 	ROOM_FULL(409, "방이 꽉 찼습니다."),
 	PASSWORD_REQUIRED(401, "비밀번호가 필요합니다."),
 	WRONG_PASSWORD(401, "비밀번호가 틀렸습니다."),
+	LEADER_CANNOT_READY(403, "방장은 레디 상태를 변경할 수 없습니다."),
 
 	// Game
 	GAME_NOT_FOUND(404, "게임을 찾을 수 없습니다."),
@@ -30,6 +31,9 @@ public enum ErrorCode {
 	NOT_LEADER(403, "방장이 아닙니다."),
 	NOT_ALL_READY(409, "전원이 레디 상태여야 게임 시작이 가능합니다."),
 	KEYWORD_NOT_FOUND(404, "키워드를 찾을 수 없습니다."),
+
+	// Round
+	ROUND_NOT_FOUND(404, "라운드를 찾을 수 없습니다."),
 
 
 	// === GLOBAL BASE ERROR CODE ===

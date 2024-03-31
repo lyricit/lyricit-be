@@ -170,6 +170,9 @@ public class RoomService {
 
 	public void ready(String memberId, String roomNumber) {
 		RoomDto roomDto = validateRoom(roomNumber);
+		if(roomDto.getLeaderId().equals(memberId)) {
+			throw new BaseException(LEADER_CANNOT_READY);
+		}
 
 		// find the member and set isReady to opposite
 		for (MemberInGameDto memberInGameDto : roomDto.getMembers()) {
