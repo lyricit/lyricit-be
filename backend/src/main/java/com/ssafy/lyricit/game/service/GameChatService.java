@@ -18,11 +18,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import com.ssafy.lyricit.chat.dto.RoomChatRequestDto;
+import com.ssafy.lyricit.chat.dto.RoomChatResponseDto;
 import com.ssafy.lyricit.common.MessagePublisher;
 import com.ssafy.lyricit.game.dto.CorrectAnswerDto;
 import com.ssafy.lyricit.game.dto.ElasticSearchResponseDto;
-import com.ssafy.lyricit.chat.dto.GameChatRequestDto;
-import com.ssafy.lyricit.chat.dto.GameChatResponseDto;
 import com.ssafy.lyricit.game.dto.GameDto;
 import com.ssafy.lyricit.game.dto.HighlightDto;
 import com.ssafy.lyricit.game.dto.HighlightNoticeDto;
@@ -58,10 +58,10 @@ public class GameChatService {
 	// 해당 방이 하이라이트 상태라면, 해당 메시지를 보낸 유저가 하이라이트 대상 멤버인지 확인
 	// 하이라이트 대상 멤버가 아니라면 그냥 채팅방에 뿌리기
 	// 하이라이트 대상 멤버라면, 제목을 아직 치지 않은 경우 handleTitle 메서드를, 가수만 남은 상태라면 checkAnswer 메서드를 호출
-	public void checkGameChatMessage(GameChatRequestDto chatRequest) throws SchedulerException {
+	public void checkGameChatMessage(RoomChatRequestDto chatRequest) throws SchedulerException {
 		// request 변수
-		String roomNumber = chatRequest.getRoomNumber();
-		String memberId = chatRequest.getMemberId();
+		String roomNumber = chatRequest.roomNumber();
+		String memberId = chatRequest.memberId();
 
 		// 게임 정보 불러오기
 		GameDto game = gameRedisTemplate.opsForValue().get(roomNumber);
@@ -90,21 +90,21 @@ public class GameChatService {
 	// 전달받은 채팅을 Elastic Search 에 검색하여,
 	// 검색결과가 아예 없는 경우에는 그냥 채팅 메세지로 처리하고,
 	// 검색결과가 나오는 경우에는, 하이라이트 상태로 전환하게 됨
-	private void handleLyric(GameChatRequestDto chatRequest) {
-		String roomNumber = chatRequest.getRoomNumber();
-		String memberId = chatRequest.getMemberId();
-		String content = chatRequest.getContent();
+	private void handleLyric(RoomChatRequestDto chatRequest) {
+		String roomNumber = chatRequest.roomNumber();
+		String memberId = chatRequest.memberId();
+		String content = chatRequest.content();
 		GameDto game = gameRedisTemplate.opsForValue().get(roomNumber);
 
 		// content 에 keyword가 포함되어 있지 않다면 아래 로직 실행하지 않고 그냥 메시지 전달
-		if (!chatRequest.getContent().contains(game.getKeyword())) {
+		if (!chatRequest.content().contains(game.getKeyword())) {
 			sendGameChatMessage(chatRequest);
 			return;
 		}
 
 		// ElasticSearch 검색
 		String requestBody =
-			"{ \"query\": { \"match_phrase\": { \"lyrics\": \"" + chatRequest.getContent() + "\" } } }";
+			"{ \"query\": { \"match_phrase\": { \"lyrics\": \"" + chatRequest.content() + "\" } } }";
 
 		ElasticSearchResponseDto response = webClient.post()
 			.uri(url)
@@ -145,15 +145,15 @@ public class GameChatService {
 
 	// 하이라이트 상태에서 제목을 입력받았을 때 실행되는 메서드
 	// 해당 제목을 redis 에 갱신하고, 입력받았던 제목을 방에 pub
-	private void handleTitle(GameChatRequestDto chatRequest) {
+	private void handleTitle(RoomChatRequestDto chatRequest) {
 
-		String roomNumber = chatRequest.getRoomNumber();
+		String roomNumber = chatRequest.roomNumber();
 
 		// 게임 불러오기
 		GameDto game = gameRedisTemplate.opsForValue().get(roomNumber);
 
 		// 입력받은 제목 정보 redis에 갱신
-		String title = chatRequest.getContent().replace(" ", "");
+		String title = chatRequest.content().replace(" ", "");
 		HighlightDto highlightInfo = game.getHighlightInfo();
 		highlightInfo = highlightInfo.toBuilder()
 			.title(title)
@@ -166,16 +166,16 @@ public class GameChatService {
 		gameRedisTemplate.opsForValue().set(roomNumber, game);
 
 		// 제목 알림 pub
-		messagePublisher.publishGameToRoom(HIGHLIGHT_TITLE.name(), roomNumber, chatRequest.getContent());
+		messagePublisher.publishGameToRoom(HIGHLIGHT_TITLE.name(), roomNumber, chatRequest.content());
 	}
 
 	// 최종적으로 정답인지 확인하는 메서드
 	// 가사 + 제목 + 가수 가 일치하는 곡이 있는 지 확인 -> Elastic Search 에서 검색
 	// 검색결과가 없으면 오답처리, 있으면 정답처리
-	private void checkAnswer(GameChatRequestDto chatRequest) throws SchedulerException {
+	private void checkAnswer(RoomChatRequestDto chatRequest) throws SchedulerException {
 
-		String roomNumber = chatRequest.getRoomNumber();
-		String memberId = chatRequest.getMemberId();
+		String roomNumber = chatRequest.roomNumber();
+		String memberId = chatRequest.memberId();
 		// 게임 불러오기
 		GameDto game = gameRedisTemplate.opsForValue().get(roomNumber);
 
@@ -185,7 +185,7 @@ public class GameChatService {
 
 		// ElasticSearch 검색
 		String requestBody = "{ \"query\" : { \"bool\" : { \"must\" : [ {\"match\" : { \"title\" : \"" + lyric
-			+ "\" }}, {\"match\" : { \"artist\" : \"" + chatRequest.getContent()
+			+ "\" }}, {\"match\" : { \"artist\" : \"" + chatRequest.content()
 			+ "\" }}, { \"match_phrase\": { \"lyrics\" : \"" + title + "\" }} ] } } }";
 
 		ElasticSearchResponseDto response = webClient.post()
@@ -207,10 +207,10 @@ public class GameChatService {
 	}
 
 	// 방에 게임 채팅 뿌리는 메서드
-	private void sendGameChatMessage(GameChatRequestDto chatRequest) {
-		GameChatResponseDto response = chatRequest.toGameChatResponseDto();
+	private void sendGameChatMessage(RoomChatRequestDto chatRequest) {
+		RoomChatResponseDto response = chatRequest.toResponseDto();
 
-		messagePublisher.publishMessageToGame(chatRequest.getRoomNumber(), response);
+		messagePublisher.publishMessageToGame(chatRequest.roomNumber(), response);
 	}
 
 	// 오답 처리 진행하는 메서드
