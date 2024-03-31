@@ -1,7 +1,8 @@
-package com.ssafy.lyricit.round.service;
+package com.ssafy.lyricit.round.job;
 
 import static com.ssafy.lyricit.common.type.EventType.*;
 import static com.ssafy.lyricit.exception.ErrorCode.*;
+import static com.ssafy.lyricit.game.constant.JobName.*;
 
 import java.util.Date;
 import java.util.List;
@@ -22,11 +23,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.ssafy.lyricit.common.MessagePublisher;
 import com.ssafy.lyricit.exception.BaseException;
-import com.ssafy.lyricit.game.domain.Keyword;
 import com.ssafy.lyricit.game.dto.GameDto;
 import com.ssafy.lyricit.game.dto.HighlightDto;
 import com.ssafy.lyricit.game.dto.ScoreDto;
-import com.ssafy.lyricit.game.repository.KeywordRepository;
+import com.ssafy.lyricit.keyword.repository.KeywordRepository;
+import com.ssafy.lyricit.keyword.domain.Keyword;
 import com.ssafy.lyricit.room.dto.RoomDto;
 import com.ssafy.lyricit.room.service.RoomService;
 
@@ -57,13 +58,13 @@ public class RoundService {
 
 	private void scheduleRoundStart(String roomNumber) throws SchedulerException {
 		JobDetail startJob = JobBuilder.newJob(RoundStartJob.class)
-			.withIdentity(roomNumber, "roundJobs")
-			.usingJobData("roomNumber", roomNumber)
+			.withIdentity(START_JOB.getValue() + roomNumber, JOB_GROUP.getValue())
+			.usingJobData(ROOM_NUMBER.getValue(), roomNumber)
 			.build();
 		Date startTime = new Date(System.currentTimeMillis() + 2000); // 2 seconds
 
 		Trigger trigger = TriggerBuilder.newTrigger()
-			.withIdentity(roomNumber, "roundTriggers")
+			.withIdentity(START_JOB.getValue() + roomNumber, JOB_GROUP.getValue())
 			.startAt(startTime)
 			.forJob(startJob)
 			.build();
@@ -73,14 +74,14 @@ public class RoundService {
 
 	private void scheduleRoundEnd(String roomNumber) throws SchedulerException {
 		JobDetail endJob = JobBuilder.newJob(RoundEndJob.class)
-			.withIdentity(roomNumber, "roundJobs")
-			.usingJobData("roomNumber", roomNumber)
+			.withIdentity(END_JOB.getValue() + roomNumber, JOB_GROUP.getValue())
+			.usingJobData(ROOM_NUMBER.getValue(), roomNumber)
 			.build();
 		Date startTime = new Date(System.currentTimeMillis() +
 			validateGame(roomNumber).getRoundTime() * 1000);
 
 		Trigger trigger = TriggerBuilder.newTrigger()
-			.withIdentity(roomNumber, "roundTriggers")
+			.withIdentity(END_JOB.getValue() + roomNumber, JOB_GROUP.getValue())
 			.startAt(startTime)
 			.forJob(endJob)
 			.build();
@@ -108,12 +109,12 @@ public class RoundService {
 
 	// cancel round if every member correct -> next round
 	public void cancelScheduledJobs(String roomNumber) throws SchedulerException {
-		JobKey startJobKey = JobKey.jobKey(roomNumber, "roundJobs");
+		JobKey startJobKey = JobKey.jobKey(START_JOB.getValue() + roomNumber, JOB_GROUP.getValue());
 		if (scheduler.checkExists(startJobKey)) {
 			scheduler.deleteJob(startJobKey);// delete round start job
 		}
 
-		JobKey endJobKey = JobKey.jobKey(roomNumber, "roundJobs");
+		JobKey endJobKey = JobKey.jobKey(END_JOB.getValue() + roomNumber, JOB_GROUP.getValue());
 		if (scheduler.checkExists(endJobKey)) {
 			scheduler.deleteJob(endJobKey);// delete round end job
 		}
@@ -125,7 +126,7 @@ public class RoundService {
 	// end round if roundTime is over -> next round
 	public void endRound(String roomNumber) {
 		try {
-			JobKey jobKey = JobKey.jobKey(roomNumber, "roundJobs");
+			JobKey jobKey = JobKey.jobKey(END_JOB.getValue() + roomNumber, JOB_GROUP.getValue());
 
 			if (scheduler.checkExists(jobKey)) {
 				scheduler.deleteJob(jobKey);
@@ -133,7 +134,7 @@ public class RoundService {
 			messagePublisher.publishGameToRoom(ROUND_ENDED.name(), roomNumber);
 			addRoundSchedule(roomNumber);// schedule next round
 		} catch (SchedulerException e) {
-			log.error("Failed to end round for room: " + roomNumber, e);
+			throw new BaseException(ROUND_END_FAIL);
 		}
 	}
 
@@ -162,7 +163,7 @@ public class RoundService {
 
 	// get random keyword from db
 	private Keyword getRandomKeyword() {
-		return keywordRepository.findById(random.nextLong(keywordRepository.count()))
+		return keywordRepository.findById(random.nextLong(keywordRepository.count()) + 1)
 			.orElseThrow(() -> new BaseException(KEYWORD_NOT_FOUND));
 	}
 }
