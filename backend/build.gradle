@@ -40,6 +40,9 @@ dependencies {
     // WebClient
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
+    // quartz
+    implementation 'org.springframework.boot:spring-boot-starter-quartz'
+
     runtimeOnly 'com.mysql:mysql-connector-j'
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
