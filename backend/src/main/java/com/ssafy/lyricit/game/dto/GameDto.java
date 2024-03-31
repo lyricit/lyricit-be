@@ -26,6 +26,7 @@ public class GameDto {
 	private HighlightDto highlightInfo;
 	private List<String> correctMembers;
 	private List<ScoreDto> members;
+	private Boolean isGameEnded;
 
 	public RoundDto toRoundDto() {
 		return RoundDto.builder()
@@ -45,6 +46,7 @@ public class GameDto {
 			.members(roomDto.getMembers().stream()
 				.map(MemberInGameDto::toScoreDto)
 				.toList())
+			.isGameEnded(false)
 			.build();
 	}
 }
