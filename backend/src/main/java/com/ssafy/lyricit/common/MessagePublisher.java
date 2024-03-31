@@ -100,4 +100,13 @@ public class MessagePublisher {
 		);
 	}
 
+	public void publishMessageToGame(String roomNumber, RoomChatResponseDto response) {
+		template.convertAndSend(SUB_ROOM.getValue() + roomNumber,
+			GlobalEventResponse.builder()
+				.type(GAME_MESSAGE.name())
+				.data(response)
+				.build()
+		);
+	}
+
 }

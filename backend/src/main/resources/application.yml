@@ -32,6 +32,14 @@ spring:
       port: ${REDIS_PORT}
       password: ${REDIS_PASSWORD}
 
+  sql:
+    init:
+      mode: always
+
+elasticsearch:
+  url: ${ELASTICSEARCH_URL}
+  api-key: ${ELASTICSEARCH_API_KEY}
+
 logging:
   level:
     org:

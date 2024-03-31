@@ -1,9 +1,9 @@
-package com.ssafy.lyricit.game.repository;
+package com.ssafy.lyricit.keyword.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import com.ssafy.lyricit.game.domain.Keyword;
+import com.ssafy.lyricit.keyword.domain.Keyword;
 
 @Repository
 public interface KeywordRepository extends JpaRepository<Keyword, Long> {

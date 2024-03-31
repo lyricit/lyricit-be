@@ -13,6 +13,7 @@ import lombok.Setter;
 @Builder
 public class ScoreDto {
 	private String memberId;
+	private String nickname;
 	private Long score;
 }
 

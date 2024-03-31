@@ -20,6 +20,7 @@ public class MemberInGameDto {
 	public ScoreDto toScoreDto() {
 		return ScoreDto.builder()
 			.memberId(member.memberId())
+			.nickname(member.nickname())
 			.score(0L)
 			.build();
 	}
