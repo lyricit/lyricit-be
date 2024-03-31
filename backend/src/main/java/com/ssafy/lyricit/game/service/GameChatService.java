@@ -9,6 +9,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,6 +28,7 @@ import com.ssafy.lyricit.game.dto.HighlightDto;
 import com.ssafy.lyricit.game.dto.HighlightNoticeDto;
 import com.ssafy.lyricit.member.dto.MemberDto;
 import com.ssafy.lyricit.room.dto.RoomDto;
+import com.ssafy.lyricit.round.service.RoundService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -35,9 +37,9 @@ import lombok.RequiredArgsConstructor;
 @Transactional
 public class GameChatService {
 	private final MessagePublisher messagePublisher;
-	private final RedisTemplate<String, Object> roomRedisTemplate;
-	private final RedisTemplate<String, Object> gameRedisTemplate;
-	private final GameService gameService;
+	private final RedisTemplate<String, RoomDto> roomRedisTemplate;
+	private final RedisTemplate<String, GameDto> gameRedisTemplate;
+	private final RoundService roundService;
 	private final WebClient webClient = WebClient.builder().build();
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
@@ -56,13 +58,13 @@ public class GameChatService {
 	// 해당 방이 하이라이트 상태라면, 해당 메시지를 보낸 유저가 하이라이트 대상 멤버인지 확인
 	// 하이라이트 대상 멤버가 아니라면 그냥 채팅방에 뿌리기
 	// 하이라이트 대상 멤버라면, 제목을 아직 치지 않은 경우 handleTitle 메서드를, 가수만 남은 상태라면 checkAnswer 메서드를 호출
-	public void checkGameChatMessage(GameChatDto chatRequest) {
+	public void checkGameChatMessage(GameChatDto chatRequest) throws SchedulerException {
 		// request 변수
 		String roomNumber = chatRequest.getRoomNumber();
 		String memberId = chatRequest.getMemberId();
 
 		// 게임 정보 불러오기
-		GameDto game = (GameDto)gameRedisTemplate.opsForValue().get(roomNumber);
+		GameDto game = gameRedisTemplate.opsForValue().get(roomNumber);
 
 		// highlight 상태인지 확인
 		if (game.getHighlightInfo().getMemberId().equals("")) {
@@ -92,7 +94,7 @@ public class GameChatService {
 		String roomNumber = chatRequest.getRoomNumber();
 		String memberId = chatRequest.getMemberId();
 		String content = chatRequest.getContent();
-		GameDto game = (GameDto)gameRedisTemplate.opsForValue().get(roomNumber);
+		GameDto game = gameRedisTemplate.opsForValue().get(roomNumber);
 
 		// content 에 keyword가 포함되어 있지 않다면 아래 로직 실행하지 않고 그냥 메시지 전달
 		if (!chatRequest.getContent().contains(game.getKeyword())) {
@@ -148,7 +150,7 @@ public class GameChatService {
 		String roomNumber = chatRequest.getRoomNumber();
 
 		// 게임 불러오기
-		GameDto game = (GameDto)gameRedisTemplate.opsForValue().get(roomNumber);
+		GameDto game = gameRedisTemplate.opsForValue().get(roomNumber);
 
 		// 입력받은 제목 정보 redis에 갱신
 		String title = chatRequest.getContent().replace(" ", "");
@@ -170,12 +172,12 @@ public class GameChatService {
 	// 최종적으로 정답인지 확인하는 메서드
 	// 가사 + 제목 + 가수 가 일치하는 곡이 있는 지 확인 -> Elastic Search 에서 검색
 	// 검색결과가 없으면 오답처리, 있으면 정답처리
-	private void checkAnswer(GameChatDto chatRequest) {
+	private void checkAnswer(GameChatDto chatRequest) throws SchedulerException {
 
 		String roomNumber = chatRequest.getRoomNumber();
 		String memberId = chatRequest.getMemberId();
 		// 게임 불러오기
-		GameDto game = (GameDto)gameRedisTemplate.opsForValue().get(roomNumber);
+		GameDto game = gameRedisTemplate.opsForValue().get(roomNumber);
 
 		// 검색할 변수
 		String lyric = game.getHighlightInfo().getLyric();
@@ -219,7 +221,7 @@ public class GameChatService {
 		log.info("roomNumber : " + roomNumber);
 
 		// 해당 멤버 정보
-		RoomDto room = (RoomDto)roomRedisTemplate.opsForValue().get(roomNumber);
+		RoomDto room = roomRedisTemplate.opsForValue().get(roomNumber);
 		log.info("1");
 		MemberDto member = room.getMembers().stream()
 			.filter(memberInGameDto -> memberInGameDto.getMember().memberId().equals(memberId))
@@ -238,13 +240,13 @@ public class GameChatService {
 	// 해당 멤버 점수정보 및 정답자 목록을 갱신하고, 정답알림을 방에 pub함
 	// 만약, 해당 방에 모든 사람이 정답을 맞췄다면, 다음 라운드로 넘어가는 메서드 호출
 	// 그렇지 않다면, 2초 후 하이라이트 취소 메서드 호출
-	private void handleCorrectAnswer(String roomNumber, String memberId) {
+	private void handleCorrectAnswer(String roomNumber, String memberId) throws SchedulerException {
 		// 하이라이트 시간제한 스케줄링 취소
 		cancelHighlightTask(roomNumber);
 
 		// 해당 게임 및 멤버 정보
-		GameDto gameDto = (GameDto)gameRedisTemplate.opsForValue().get(roomNumber);
-		RoomDto room = (RoomDto)roomRedisTemplate.opsForValue().get(roomNumber);
+		GameDto gameDto = gameRedisTemplate.opsForValue().get(roomNumber);
+		RoomDto room = roomRedisTemplate.opsForValue().get(roomNumber);
 		MemberDto member = room.getMembers().stream()
 			.filter(memberInGameDto -> memberInGameDto.getMember().memberId().equals(memberId))
 			.findFirst()
@@ -283,7 +285,7 @@ public class GameChatService {
 
 		// 해당 방의 전원이 정답을 맞추었다면 다음 라운드로 넘어가기
 		if (gameDto.getCorrectMembers().size() == gameDto.getPlayerCount()) {
-			gameService.startRound(roomNumber);
+			roundService.cancelScheduledJobs(roomNumber);
 		} else {
 			// 2초 후 하이라이트 취소 메서드 호출
 			scheduler.schedule(() -> cancelHighlight(roomNumber), 2, TimeUnit.SECONDS);
@@ -303,7 +305,7 @@ public class GameChatService {
 	// 하이라이트 정보를 초기화 하고 방에 알림 pub
 	private void cancelHighlight(String roomNumber) {
 		// 게임 불러오기
-		GameDto gameDto = (GameDto)gameRedisTemplate.opsForValue().get(roomNumber);
+		GameDto gameDto = gameRedisTemplate.opsForValue().get(roomNumber);
 
 		// 게임 정보 갱신 (하이라이트 정보 초기화)
 		HighlightDto highlightDto = gameDto.getHighlightInfo();
