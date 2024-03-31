@@ -1,24 +1,26 @@
 package com.ssafy.lyricit.config;
 
-import org.quartz.Scheduler;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 
 @Configuration
-public class SchedulerConfig {
+public class QuartzConfig {
+
+	private final ApplicationContext applicationContext;
+
+	public QuartzConfig(ApplicationContext applicationContext) {
+		this.applicationContext = applicationContext;
+	}
+
 	@Bean
-	public Scheduler scheduler(ApplicationContext applicationContext) throws Exception {
+	public SchedulerFactoryBean schedulerFactoryBean() {
 		AutowiringSpringBeanJobFactory jobFactory = new AutowiringSpringBeanJobFactory();
 		jobFactory.setApplicationContext(applicationContext);
 
-		SchedulerFactoryBean factory = new SchedulerFactoryBean();
-		factory.setJobFactory(jobFactory);
-		factory.afterPropertiesSet();
-
-		Scheduler scheduler = factory.getScheduler();
-		scheduler.start();
-		return scheduler;
+		SchedulerFactoryBean schedulerFactoryBean = new SchedulerFactoryBean();
+		schedulerFactoryBean.setJobFactory(jobFactory);
+		return schedulerFactoryBean;
 	}
 }
