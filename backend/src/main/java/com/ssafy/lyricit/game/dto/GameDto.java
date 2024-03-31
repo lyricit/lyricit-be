@@ -23,7 +23,7 @@ public class GameDto {
 	private Long roundTime;
 	private Long currentRound;
 	private String keyword;
-	private HighlightDto highlightInfo;
+	private HighlightDto highlightDto;
 	private List<String> correctMembers;
 	private List<ScoreDto> members;
 	private Boolean isGameEnded;
@@ -42,7 +42,7 @@ public class GameDto {
 			.currentRound(0L)
 			.keyword("")
 			.correctMembers(new ArrayList<>())
-			.highlightInfo(initialHighlightInfo)
+			.highlightDto(initialHighlightInfo)
 			.members(roomDto.getMembers().stream()
 				.map(MemberInGameDto::toScoreDto)
 				.toList())

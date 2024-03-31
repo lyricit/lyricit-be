@@ -97,7 +97,7 @@ public class RoundService {
 		gameDto = gameDto.toBuilder()
 			.currentRound(gameDto.getCurrentRound() + 1)
 			.keyword(keyword.getWord())
-			.highlightInfo(HighlightDto.create())
+			.highlightDto(HighlightDto.create())
 			.build();
 
 		// update
