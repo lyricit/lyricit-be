@@ -16,11 +16,19 @@ public class HighlightDto {
 	private String lyric;
 	private String title;
 
-	public HighlightNoticeDto toHighlightNoticeDto () {
+	public HighlightNoticeDto toHighlightNoticeDto() {
 		return HighlightNoticeDto.builder()
 			.memberId(memberId)
 			.lyric(lyric)
 			.timeLimit(15L)
+			.build();
+	}
+
+	public static HighlightDto create() {
+		return HighlightDto.builder()
+			.memberId("")
+			.lyric("")
+			.title("")
 			.build();
 	}
 }
