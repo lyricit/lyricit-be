@@ -25,6 +25,7 @@ public enum ErrorCode {
 	WRONG_PASSWORD(401, "비밀번호가 틀렸습니다."),
 
 	// Game
+	GAME_NOT_FOUND(404, "게임을 찾을 수 없습니다."),
 	GAME_ALREADY_PLAYING(409, "이미 게임이 진행 중입니다."),
 	NOT_LEADER(403, "방장이 아닙니다."),
 	NOT_ALL_READY(409, "전원이 레디 상태여야 게임 시작이 가능합니다."),
