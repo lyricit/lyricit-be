@@ -2,6 +2,7 @@ package com.ssafy.lyricit.room.controller;
 
 import java.util.List;
 
+import org.quartz.SchedulerException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ssafy.lyricit.game.service.GameService;
 import com.ssafy.lyricit.room.dto.RoomInsideDto;
 import com.ssafy.lyricit.room.dto.RoomOutsideDto;
 import com.ssafy.lyricit.room.dto.RoomPasswordDto;
@@ -29,6 +31,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class RoomController {
 	private final RoomService roomService;
+	private final GameService gameService;
 
 	@Operation(summary = "방 생성")
 	@PostMapping
@@ -74,6 +77,15 @@ public class RoomController {
 		@RequestHeader String memberId,
 		@PathVariable String roomNumber) {
 		roomService.ready(memberId, roomNumber);
+		return ResponseEntity.ok().build();
+	}
+
+	@Operation(summary = "게임 시작")
+	@PostMapping("/{roomNumber}/start")
+	public ResponseEntity<Void> startGame(
+		@RequestHeader String memberId,
+		@PathVariable String roomNumber) throws SchedulerException {
+		gameService.startGame(memberId, roomNumber);
 		return ResponseEntity.ok().build();
 	}
 }
