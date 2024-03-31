@@ -34,6 +34,7 @@ public enum ErrorCode {
 
 	// Round
 	ROUND_NOT_FOUND(404, "라운드를 찾을 수 없습니다."),
+	ROUND_END_FAIL(500, "라운드 종료에 실패했습니다."),
 
 
 	// === GLOBAL BASE ERROR CODE ===
