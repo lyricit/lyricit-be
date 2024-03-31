@@ -33,7 +33,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Transactional
 public class RoomService {
-	private final RedisTemplate<String, Object> roomRedisTemplate;
+	private final RedisTemplate<String, RoomDto> roomRedisTemplate;
 	private final RoomRepository roomRepository;
 	private final MemberRepository memberRepository;
 	private final MessagePublisher messagePublisher;
@@ -61,12 +61,7 @@ public class RoomService {
 	}
 
 	public RoomInsideDto enterRoom(String memberId, String roomNumber, RoomPasswordDto roomPasswordDto) {
-		// check redis key
-		if (Boolean.FALSE.equals(roomRedisTemplate.hasKey(roomNumber))) {
-			throw new BaseException(ROOM_NOT_FOUND);
-		}
-
-		RoomDto roomDto = (RoomDto)roomRedisTemplate.opsForValue().get(roomNumber);
+		RoomDto roomDto = validateRoom(roomNumber);
 
 		// check member already in room
 		if (roomDto.getMembers().stream().anyMatch(m -> m.getMember().memberId().equals(memberId))) {
@@ -105,12 +100,7 @@ public class RoomService {
 		if (roomNumber.equals("0")) {
 			return;
 		}
-		// check redis key
-		if (Boolean.FALSE.equals(roomRedisTemplate.hasKey(roomNumber))) {
-			throw new BaseException(ROOM_NOT_FOUND);
-		}
-
-		RoomDto roomDto = (RoomDto)roomRedisTemplate.opsForValue().get(roomNumber);
+		RoomDto roomDto = validateRoom(roomNumber);
 
 		// remove member in room if exist
 		MemberInGameDto memberInGameDto = roomDto.getMembers().stream()
@@ -179,12 +169,7 @@ public class RoomService {
 	}
 
 	public void ready(String memberId, String roomNumber) {
-		// check redis key
-		if (Boolean.FALSE.equals(roomRedisTemplate.hasKey(roomNumber))) {
-			throw new BaseException(ROOM_NOT_FOUND);
-		}
-
-		RoomDto roomDto = (RoomDto)roomRedisTemplate.opsForValue().get(roomNumber);
+		RoomDto roomDto = validateRoom(roomNumber);
 
 		// find the member and set isReady to opposite
 		for (MemberInGameDto memberInGameDto : roomDto.getMembers()) {
@@ -209,7 +194,7 @@ public class RoomService {
 
 		if (roomNumbers != null) {
 			for (String roomNumber : roomNumbers) {
-				RoomDto roomDto = (RoomDto)roomRedisTemplate.opsForValue().get(roomNumber); // get value by key
+				RoomDto roomDto = roomRedisTemplate.opsForValue().get(roomNumber); // get value by key
 				if (roomDto != null) {
 					RoomOutsideDto roomOutsideDto = roomDto.toOutsideDto(roomNumber);
 					roomOutsideDtoList.add(roomOutsideDto);
@@ -222,15 +207,17 @@ public class RoomService {
 	}
 
 	public RoomOutsideDto readRoomByRoomNumber(String roomNumber) {
+		RoomOutsideDto roomOutsideDto = validateRoom(roomNumber).toOutsideDto(roomNumber);
+		log.info("\n [방 조회 결과] \n {}", roomOutsideDto);
+		return roomOutsideDto;
+	}
+
+	// get roomDto from db if exists
+	public RoomDto validateRoom(String roomNumber) {
 		if (Boolean.FALSE.equals(roomRedisTemplate.hasKey(roomNumber))) {
 			throw new BaseException(ROOM_NOT_FOUND);
 		}
-
-		RoomOutsideDto roomOutsideDto =
-			((RoomDto)roomRedisTemplate.opsForValue().get(roomNumber)).toOutsideDto(roomNumber);
-
-		log.info("\n [방 조회 결과] \n {}", roomOutsideDto);
-		return roomOutsideDto;
+		return roomRedisTemplate.opsForValue().get(roomNumber);
 	}
 
 	private String findEmptyRoomNumber() {
