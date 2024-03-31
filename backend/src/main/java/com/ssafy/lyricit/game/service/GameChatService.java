@@ -182,9 +182,9 @@ public class GameChatService {
 		String title = game.getHighlightDto().getTitle();
 
 		// ElasticSearch 검색
-		String requestBody = "{ \"query\" : { \"bool\" : { \"must\" : [ {\"match\" : { \"title\" : \"" + lyric
+		String requestBody = "{ \"query\" : { \"bool\" : { \"must\" : [ {\"match\" : { \"title\" : \"" + title
 			+ "\" }}, {\"match\" : { \"artist\" : \"" + chatRequest.content()
-			+ "\" }}, { \"match_phrase\": { \"lyrics\" : \"" + title + "\" }} ] } } }";
+			+ "\" }}, { \"match_phrase\": { \"lyrics\" : \"" + lyric + "\" }} ] } } }";
 
 		ElasticSearchResponseDto response = webClient.post()
 			.uri(url)
