@@ -1,6 +1,7 @@
 package com.ssafy.lyricit.game.service;
 
 import static com.ssafy.lyricit.common.type.EventType.*;
+import static com.ssafy.lyricit.exception.ErrorCode.*;
 
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -21,6 +22,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import com.ssafy.lyricit.chat.dto.RoomChatRequestDto;
 import com.ssafy.lyricit.chat.dto.RoomChatResponseDto;
 import com.ssafy.lyricit.common.MessagePublisher;
+import com.ssafy.lyricit.exception.BaseException;
 import com.ssafy.lyricit.game.dto.CorrectAnswerDto;
 import com.ssafy.lyricit.game.dto.ElasticSearchResponseDto;
 import com.ssafy.lyricit.game.dto.GameDto;
@@ -28,6 +30,7 @@ import com.ssafy.lyricit.game.dto.HighlightDto;
 import com.ssafy.lyricit.game.dto.HighlightNoticeDto;
 import com.ssafy.lyricit.member.dto.MemberDto;
 import com.ssafy.lyricit.room.dto.RoomDto;
+import com.ssafy.lyricit.room.service.RoomService;
 import com.ssafy.lyricit.round.job.RoundService;
 
 import lombok.RequiredArgsConstructor;
@@ -36,21 +39,21 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Transactional
 public class GameChatService {
+	// ElasticSearch 변수
+	@Value("${ELASTICSEARCH_URL}")
+	private String url;
+	@Value("${ELASTICSEARCH_API_KEY}")
+	private String apiKey;
 	private final MessagePublisher messagePublisher;
 	private final RedisTemplate<String, RoomDto> roomRedisTemplate;
 	private final RedisTemplate<String, GameDto> gameRedisTemplate;
+	private final RoomService roomService;
 	private final RoundService roundService;
 	private final WebClient webClient = WebClient.builder().build();
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
 	private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(10);
 	private final ConcurrentHashMap<String, ScheduledFuture<?>> highlightTasks = new ConcurrentHashMap<>();
-
-	// ElasticSearch 변수
-	@Value("${ELASTICSEARCH_URL}")
-	private String url;
-	@Value("${ELASTICSEARCH_API_KEY}")
-	private String apiKey;
 
 	// 게임 내 채팅 메세지 확인하는 메서드
 	// 먼저 해당 방이 하이라이트 상태인지 확인
@@ -64,37 +67,36 @@ public class GameChatService {
 		String memberId = chatRequest.memberId();
 
 		// 게임 정보 불러오기
-		GameDto game = gameRedisTemplate.opsForValue().get(roomNumber);
+		GameDto game = roundService.validateGame(roomNumber);
 
 		// highlight 상태인지 확인
-		if (game.getHighlightInfo().getMemberId().equals("")) {
-			handleLyric(chatRequest);
-		} else {
-			// 해당 메시지를 보낸 유저가 highlight 멤버인지 확인
-			if (!game.getHighlightInfo().getMemberId().equals(memberId)) {
-				// highlight 멤버가 아닌 경우, 그냥 메시지 전달
-				sendGameChatMessage(chatRequest);
-			} else {
-				if (game.getHighlightInfo().getTitle().equals("")) {
-					// 제목이 아직 비어있는 경우
-					handleTitle(chatRequest);
-				} else {
-					// 제목이 이미 있는 경우, 정답 체크
-					checkAnswer(chatRequest);
-				}
-			}
+		if (game.getHighlightDto().getMemberId().isEmpty()) {
+			handleLyric(chatRequest, game);
+			return;
 		}
+		// 해당 메시지를 보낸 유저가 highlight 멤버인지 확인
+		if (!game.getHighlightDto().getMemberId().equals(memberId)) {
+			// highlight 멤버가 아닌 경우, 그냥 메시지 전달
+			sendGameChatMessage(chatRequest);
+			return;
+		}
+		if (game.getHighlightDto().getTitle().isEmpty()) {
+			// 제목이 아직 비어있는 경우
+			handleTitle(chatRequest, game);
+			return;
+		}
+		// 제목이 이미 있는 경우, 정답 체크
+		checkAnswer(chatRequest, game);
 	}
 
 	// 해당 채팅 메세지가 하이라이트 대상인지 확인하는 메서드
 	// 전달받은 채팅을 Elastic Search 에 검색하여,
 	// 검색결과가 아예 없는 경우에는 그냥 채팅 메세지로 처리하고,
 	// 검색결과가 나오는 경우에는, 하이라이트 상태로 전환하게 됨
-	private void handleLyric(RoomChatRequestDto chatRequest) {
+	private void handleLyric(RoomChatRequestDto chatRequest, GameDto game) {
 		String roomNumber = chatRequest.roomNumber();
 		String memberId = chatRequest.memberId();
 		String content = chatRequest.content();
-		GameDto game = gameRedisTemplate.opsForValue().get(roomNumber);
 
 		// content 에 keyword가 포함되어 있지 않다면 아래 로직 실행하지 않고 그냥 메시지 전달
 		if (!chatRequest.content().contains(game.getKeyword())) {
@@ -115,28 +117,31 @@ public class GameChatService {
 			.bodyToMono(ElasticSearchResponseDto.class)
 			.block();
 
+		assert response != null;
 		if (response.getHits().getTotal().getValue() == 0) {
 			// 정답이 없는 경우 그냥 메세지 처리
 			sendGameChatMessage(chatRequest);
 		} else if (response.getHits().getTotal().getValue() > 0) {
 			// 정답이 있는 경우는 하이라이트 상태로 전환
-			HighlightDto highlightInfo = game.getHighlightInfo();
+			HighlightDto highlightInfo = game.getHighlightDto();
 			highlightInfo = highlightInfo.toBuilder()
 				.memberId(memberId)
 				.lyric(content)
 				.build();
 			game = game.toBuilder()
-				.highlightInfo(highlightInfo)
+				.highlightDto(highlightInfo)
 				.build();
 			gameRedisTemplate.opsForValue().set(roomNumber, game);
-			GameDto gameDto = game;
 
 			// 하이라이트 상태를 방에 전달
 			HighlightNoticeDto highlightNoticeDto = highlightInfo.toHighlightNoticeDto();
 			messagePublisher.publishGameToRoom(HIGHLIGHT.name(), roomNumber, highlightNoticeDto);
 
+			RoomDto room = roomService.validateRoom(roomNumber);
 			// 하이라이트 시간제한 스케줄링 (15초 이내에 정답을 맞추지 못하면 오답처리)
-			ScheduledFuture<?> highlightTask = scheduler.schedule(() -> handleIncorrectAnswer(roomNumber, memberId), 15L,
+			ScheduledFuture<?> highlightTask = scheduler.schedule(
+				() -> handleIncorrectAnswer(roomNumber, memberId, room),
+				15L,
 				TimeUnit.SECONDS);
 
 			highlightTasks.put(roomNumber, highlightTask);
@@ -145,22 +150,18 @@ public class GameChatService {
 
 	// 하이라이트 상태에서 제목을 입력받았을 때 실행되는 메서드
 	// 해당 제목을 redis 에 갱신하고, 입력받았던 제목을 방에 pub
-	private void handleTitle(RoomChatRequestDto chatRequest) {
-
+	private void handleTitle(RoomChatRequestDto chatRequest, GameDto game) {
 		String roomNumber = chatRequest.roomNumber();
-
-		// 게임 불러오기
-		GameDto game = gameRedisTemplate.opsForValue().get(roomNumber);
 
 		// 입력받은 제목 정보 redis에 갱신
 		String title = chatRequest.content().replace(" ", "");
-		HighlightDto highlightInfo = game.getHighlightInfo();
+		HighlightDto highlightInfo = game.getHighlightDto();
 		highlightInfo = highlightInfo.toBuilder()
 			.title(title)
 			.build();
 
 		game = game.toBuilder()
-			.highlightInfo(highlightInfo)
+			.highlightDto(highlightInfo)
 			.build();
 
 		gameRedisTemplate.opsForValue().set(roomNumber, game);
@@ -172,16 +173,13 @@ public class GameChatService {
 	// 최종적으로 정답인지 확인하는 메서드
 	// 가사 + 제목 + 가수 가 일치하는 곡이 있는 지 확인 -> Elastic Search 에서 검색
 	// 검색결과가 없으면 오답처리, 있으면 정답처리
-	private void checkAnswer(RoomChatRequestDto chatRequest) throws SchedulerException {
-
+	private void checkAnswer(RoomChatRequestDto chatRequest, GameDto game) throws SchedulerException {
 		String roomNumber = chatRequest.roomNumber();
 		String memberId = chatRequest.memberId();
-		// 게임 불러오기
-		GameDto game = gameRedisTemplate.opsForValue().get(roomNumber);
 
 		// 검색할 변수
-		String lyric = game.getHighlightInfo().getLyric();
-		String title = game.getHighlightInfo().getTitle();
+		String lyric = game.getHighlightDto().getLyric();
+		String title = game.getHighlightDto().getTitle();
 
 		// ElasticSearch 검색
 		String requestBody = "{ \"query\" : { \"bool\" : { \"must\" : [ {\"match\" : { \"title\" : \"" + lyric
@@ -197,12 +195,15 @@ public class GameChatService {
 			.bodyToMono(ElasticSearchResponseDto.class)
 			.block();
 
+		RoomDto room = roomService.validateRoom(roomNumber);
+
+		assert response != null;
 		if (response.getHits().getTotal().getValue() == 0) {
 			// 검색결과 없으면 오답처리
-			handleIncorrectAnswer(roomNumber, memberId);
+			handleIncorrectAnswer(roomNumber, memberId, room);
 		} else {
 			// 검색결과 있으면 정답처리
-			handleCorrectAnswer(roomNumber, memberId);
+			handleCorrectAnswer(roomNumber, memberId, room, game);
 		}
 	}
 
@@ -215,18 +216,17 @@ public class GameChatService {
 
 	// 오답 처리 진행하는 메서드
 	// 방에 오답 알림 pub 하고 2초 후 하이라이트 취소 메서드 호출
-	private void handleIncorrectAnswer(String roomNumber, String memberId) {
+	private void handleIncorrectAnswer(String roomNumber, String memberId, RoomDto room) {
 		// 하이라이트 시간제한 스케줄링 취소
 		cancelHighlightTask(roomNumber);
 		log.info("roomNumber : " + roomNumber);
 
 		// 해당 멤버 정보
-		RoomDto room = roomRedisTemplate.opsForValue().get(roomNumber);
 		log.info("1");
 		MemberDto member = room.getMembers().stream()
 			.filter(memberInGameDto -> memberInGameDto.getMember().memberId().equals(memberId))
 			.findFirst()
-			.get()
+			.orElseThrow(() -> new BaseException(MEMBER_NOT_FOUND))
 			.getMember();
 
 		// 오답 알림 pub
@@ -240,39 +240,38 @@ public class GameChatService {
 	// 해당 멤버 점수정보 및 정답자 목록을 갱신하고, 정답알림을 방에 pub함
 	// 만약, 해당 방에 모든 사람이 정답을 맞췄다면, 다음 라운드로 넘어가는 메서드 호출
 	// 그렇지 않다면, 2초 후 하이라이트 취소 메서드 호출
-	private void handleCorrectAnswer(String roomNumber, String memberId) throws SchedulerException {
+	private void handleCorrectAnswer(String roomNumber, String memberId, RoomDto room, GameDto game) throws
+		SchedulerException {
 		// 하이라이트 시간제한 스케줄링 취소
 		cancelHighlightTask(roomNumber);
 
 		// 해당 게임 및 멤버 정보
-		GameDto gameDto = gameRedisTemplate.opsForValue().get(roomNumber);
-		RoomDto room = roomRedisTemplate.opsForValue().get(roomNumber);
 		MemberDto member = room.getMembers().stream()
 			.filter(memberInGameDto -> memberInGameDto.getMember().memberId().equals(memberId))
 			.findFirst()
-			.get()
+			.orElseThrow(() -> new BaseException(MEMBER_NOT_FOUND))
 			.getMember();
-		Long totalScore = gameDto.getMembers().stream()
+		Long totalScore = game.getMembers().stream()
 			.filter(scoreDto -> scoreDto.getMemberId().equals(memberId))
 			.findFirst()
-			.get()
+			.orElseThrow(() -> new BaseException(SCORE_NOT_FOUND))
 			.getScore();
 
 		// redis 에 게임 정보 갱신
 		// 정답 맞춘 해당 멤버 점수 갱신
-		gameDto.getMembers().stream()
+		game.getMembers().stream()
 			.filter(scoreDto -> scoreDto.getMemberId().equals(memberId))
 			.findFirst()
-			.get()
+			.orElseThrow(() -> new BaseException(SCORE_NOT_FOUND))
 			.setScore(totalScore + 1000L);
 		// 정답자 목록에 추가
-		List<String> correctMembers = gameDto.getCorrectMembers();
+		List<String> correctMembers = game.getCorrectMembers();
 		correctMembers.add(memberId);
 
-		gameDto = gameDto.toBuilder()
+		game = game.toBuilder()
 			.correctMembers(correctMembers)
 			.build();
-		gameRedisTemplate.opsForValue().set(roomNumber, gameDto);
+		gameRedisTemplate.opsForValue().set(roomNumber, game);
 
 		// 정답 알림 pub
 		CorrectAnswerDto correctAnswerDto = CorrectAnswerDto.builder()
@@ -284,7 +283,7 @@ public class GameChatService {
 		messagePublisher.publishGameToRoom(CORRECT_ANSWER.name(), roomNumber, correctAnswerDto);
 
 		// 해당 방의 전원이 정답을 맞추었다면 다음 라운드로 넘어가기
-		if (gameDto.getCorrectMembers().size() == gameDto.getPlayerCount()) {
+		if (game.getCorrectMembers().size() == game.getPlayerCount()) {
 			roundService.cancelScheduledJobs(roomNumber);
 		} else {
 			// 2초 후 하이라이트 취소 메서드 호출
@@ -305,17 +304,17 @@ public class GameChatService {
 	// 하이라이트 정보를 초기화 하고 방에 알림 pub
 	private void cancelHighlight(String roomNumber) {
 		// 게임 불러오기
-		GameDto gameDto = gameRedisTemplate.opsForValue().get(roomNumber);
+		GameDto gameDto = roundService.validateGame(roomNumber);
 
 		// 게임 정보 갱신 (하이라이트 정보 초기화)
-		HighlightDto highlightDto = gameDto.getHighlightInfo();
+		HighlightDto highlightDto = gameDto.getHighlightDto();
 		highlightDto = highlightDto.toBuilder()
 			.memberId("")
 			.lyric("")
 			.title("")
 			.build();
 		gameDto = gameDto.toBuilder()
-			.highlightInfo(highlightDto)
+			.highlightDto(highlightDto)
 			.build();
 
 		gameRedisTemplate.opsForValue().set(roomNumber, gameDto);
