@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.ssafy.lyricit.game.dto.GameDto;
+import com.ssafy.lyricit.round.service.RoundService;
 
 @Component
 public class RoundStartJob implements Job {

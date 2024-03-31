@@ -31,7 +31,7 @@ import com.ssafy.lyricit.game.dto.HighlightNoticeDto;
 import com.ssafy.lyricit.member.dto.MemberDto;
 import com.ssafy.lyricit.room.dto.RoomDto;
 import com.ssafy.lyricit.room.service.RoomService;
-import com.ssafy.lyricit.round.job.RoundService;
+import com.ssafy.lyricit.round.service.RoundService;
 
 import lombok.RequiredArgsConstructor;
 

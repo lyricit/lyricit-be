@@ -9,6 +9,8 @@ import org.quartz.JobExecutionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.ssafy.lyricit.round.service.RoundService;
+
 @Component
 public class RoundEndJob implements Job {
 	@Autowired

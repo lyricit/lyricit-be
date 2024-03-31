@@ -1,4 +1,4 @@
-package com.ssafy.lyricit.round.job;
+package com.ssafy.lyricit.round.service;
 
 import static com.ssafy.lyricit.common.type.EventType.*;
 import static com.ssafy.lyricit.exception.ErrorCode.*;
@@ -30,6 +30,8 @@ import com.ssafy.lyricit.keyword.repository.KeywordRepository;
 import com.ssafy.lyricit.keyword.domain.Keyword;
 import com.ssafy.lyricit.room.dto.RoomDto;
 import com.ssafy.lyricit.room.service.RoomService;
+import com.ssafy.lyricit.round.job.RoundEndJob;
+import com.ssafy.lyricit.round.job.RoundStartJob;
 
 import lombok.RequiredArgsConstructor;
 
