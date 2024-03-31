@@ -1,6 +1,11 @@
 package com.ssafy.lyricit.game.dto;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import com.ssafy.lyricit.member.dto.MemberInGameDto;
+import com.ssafy.lyricit.room.dto.RoomDto;
+import com.ssafy.lyricit.round.dto.RoundDto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,17 +21,30 @@ import lombok.Setter;
 public class GameDto {
 	private Long playerCount;
 	private Long roundTime;
-	private Long roundLimit;
 	private Long currentRound;
 	private String keyword;
 	private HighlightDto highlightInfo;
 	private List<String> correctMembers;
 	private List<ScoreDto> members;
 
-	public GameRoundDto toRoundDto() {
-		return GameRoundDto.builder()
+	public RoundDto toRoundDto() {
+		return RoundDto.builder()
 			.currentRound(currentRound)
 			.keyword(keyword)
+			.build();
+	}
+
+	public static GameDto create(RoomDto roomDto, HighlightDto initialHighlightInfo) {
+		return GameDto.builder()
+			.playerCount(roomDto.getPlayerCount())
+			.roundTime(roomDto.getRoundTime())
+			.currentRound(0L)
+			.keyword("")
+			.correctMembers(new ArrayList<>())
+			.highlightInfo(initialHighlightInfo)
+			.members(roomDto.getMembers().stream()
+				.map(MemberInGameDto::toScoreDto)
+				.toList())
 			.build();
 	}
 }

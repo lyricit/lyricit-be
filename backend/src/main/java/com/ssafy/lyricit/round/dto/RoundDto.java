@@ -1,9 +1,9 @@
-package com.ssafy.lyricit.game.dto;
+package com.ssafy.lyricit.round.dto;
 
 import lombok.Builder;
 
 @Builder
-public record GameRoundDto(
+public record RoundDto(
 	Long currentRound,
 	String keyword
 ) {
