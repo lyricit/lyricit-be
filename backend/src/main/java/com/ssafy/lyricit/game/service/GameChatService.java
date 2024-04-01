@@ -13,19 +13,18 @@ import java.util.concurrent.TimeUnit;
 import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.reactive.function.client.WebClient;
 
+import com.ssafy.lyricit.Search.service.SearchService;
 import com.ssafy.lyricit.chat.dto.RoomChatRequestDto;
 import com.ssafy.lyricit.chat.dto.RoomChatResponseDto;
 import com.ssafy.lyricit.common.MessagePublisher;
 import com.ssafy.lyricit.exception.BaseException;
 import com.ssafy.lyricit.game.constant.ScoreValue;
 import com.ssafy.lyricit.game.dto.CorrectAnswerDto;
-import com.ssafy.lyricit.game.dto.ElasticSearchResponseDto;
+import com.ssafy.lyricit.Search.dto.ElasticSearchResponseDto;
 import com.ssafy.lyricit.game.dto.GameDto;
 import com.ssafy.lyricit.game.dto.HighlightDto;
 import com.ssafy.lyricit.game.dto.HighlightNoticeDto;
@@ -40,17 +39,14 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Transactional
 public class GameChatService {
-	// ElasticSearch 변수
-	@Value("${ELASTICSEARCH_URL}")
-	private String url;
-	@Value("${ELASTICSEARCH_API_KEY}")
-	private String apiKey;
+
 	private final MessagePublisher messagePublisher;
 	private final RedisTemplate<String, RoomDto> roomRedisTemplate;
 	private final RedisTemplate<String, GameDto> gameRedisTemplate;
 	private final RoomService roomService;
 	private final RoundService roundService;
-	private final WebClient webClient = WebClient.builder().build();
+	private final SearchService searchService;
+
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
 	private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(10);
@@ -99,24 +95,14 @@ public class GameChatService {
 		String memberId = chatRequest.memberId();
 		String content = chatRequest.content();
 
-		// content 에 keyword가 포함되어 있지 않다면 아래 로직 실행하지 않고 그냥 메시지 전달
+		// content 에 keyword 가 포함되어 있지 않다면 아래 로직 실행하지 않고 그냥 메시지 전달
 		if (!chatRequest.content().contains(game.getKeyword())) {
 			sendGameChatMessage(chatRequest);
 			return;
 		}
 
-		// ElasticSearch 검색
-		String requestBody =
-			"{ \"query\": { \"match_phrase\": { \"lyrics\": \"" + chatRequest.content() + "\" } } }";
-
-		ElasticSearchResponseDto response = webClient.post()
-			.uri(url)
-			.header("Authorization", "ApiKey " + apiKey)
-			.header("Content-Type", "application/json")
-			.bodyValue(requestBody)
-			.retrieve()
-			.bodyToMono(ElasticSearchResponseDto.class)
-			.block();
+		// 엘라스틱 서치에 검색하여 결과값 받아오기
+		ElasticSearchResponseDto response = searchService.searchLyrics(content);
 
 		assert response != null;
 		if (response.getHits().getTotal().getValue() == 0) {
@@ -154,7 +140,7 @@ public class GameChatService {
 	private void handleTitle(RoomChatRequestDto chatRequest, GameDto game) {
 		String roomNumber = chatRequest.roomNumber();
 
-		// 입력받은 제목 정보 redis에 갱신
+		// 입력받은 제목 정보 redis 에 갱신
 		String title = chatRequest.content().replace(" ", "");
 		HighlightDto highlightInfo = game.getHighlightDto();
 		highlightInfo = highlightInfo.toBuilder()
@@ -182,30 +168,19 @@ public class GameChatService {
 		String lyric = game.getHighlightDto().getLyric();
 		String title = game.getHighlightDto().getTitle();
 
-		// ElasticSearch 검색
-		String requestBody = "{ \"query\" : { \"bool\" : { \"must\" : [ {\"match\" : { \"title\" : \"" + title
-			+ "\" }}, {\"match\" : { \"artist\" : \"" + chatRequest.content()
-			+ "\" }}, { \"match_phrase\": { \"lyrics\" : \"" + lyric + "\" }} ] } } }";
-
-		ElasticSearchResponseDto response = webClient.post()
-			.uri(url)
-			.header("Authorization", "ApiKey " + apiKey)
-			.header("Content-Type", "application/json")
-			.bodyValue(requestBody)
-			.retrieve()
-			.bodyToMono(ElasticSearchResponseDto.class)
-			.block();
-
-		RoomDto room = roomService.validateRoom(roomNumber);
-
-		assert response != null;
-		if (response.getHits().getTotal().getValue() == 0) {
-			// 검색결과 없으면 오답처리
-			handleIncorrectAnswer(roomNumber, memberId, room);
-		} else {
-			// 검색결과 있으면 정답처리
-			handleCorrectAnswer(roomNumber, memberId, room, game, response);
-		}
+		// 엘라스틱 서치에 검색하기
+		// ElasticSearchResponseDto response = searchService.searchAnswer(lyric, title, chatRequest.content());
+		//
+		// RoomDto room = roomService.validateRoom(roomNumber);
+		//
+		// assert response != null;
+		// if (response.getHits().getTotal().getValue() == 0) {
+		// 	// 검색결과 없으면 오답처리
+		// 	handleIncorrectAnswer(roomNumber, memberId, room);
+		// } else {
+		// 	// 검색결과 있으면 정답처리
+		// 	handleCorrectAnswer(roomNumber, memberId, room, game, response);
+		// }
 	}
 
 	// 방에 게임 채팅 뿌리는 메서드
@@ -238,7 +213,7 @@ public class GameChatService {
 	}
 
 	// 정답 맟췄을 시 진행하는 메서드
-	// 해당 멤버 점수정보 및 정답자 목록을 갱신하고, 정답알림을 방에 pub함
+	// 해당 멤버 점수정보 및 정답자 목록을 갱신하고, 정답알림을 방에 pub 함
 	// 만약, 해당 방에 모든 사람이 정답을 맞췄다면, 다음 라운드로 넘어가는 메서드 호출
 	// 그렇지 않다면, 2초 후 하이라이트 취소 메서드 호출
 	private void handleCorrectAnswer(String roomNumber, String memberId, RoomDto room, GameDto game, ElasticSearchResponseDto response) throws
