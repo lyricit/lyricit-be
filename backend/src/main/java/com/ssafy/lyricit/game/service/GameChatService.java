@@ -23,6 +23,7 @@ import com.ssafy.lyricit.chat.dto.RoomChatRequestDto;
 import com.ssafy.lyricit.chat.dto.RoomChatResponseDto;
 import com.ssafy.lyricit.common.MessagePublisher;
 import com.ssafy.lyricit.exception.BaseException;
+import com.ssafy.lyricit.game.constant.ScoreValue;
 import com.ssafy.lyricit.game.dto.CorrectAnswerDto;
 import com.ssafy.lyricit.game.dto.ElasticSearchResponseDto;
 import com.ssafy.lyricit.game.dto.GameDto;
@@ -258,14 +259,14 @@ public class GameChatService {
 			.getScore();
 
 		// redis 에 게임 정보 갱신
-		// 정답 맞춘 해당 멤버 점수 갱신
+		List<String> correctMembers = game.getCorrectMembers();
+		Long addedScore = ScoreValue.values()[correctMembers.size()].getValue();
+
 		game.getMembers().stream()
 			.filter(scoreDto -> scoreDto.getMemberId().equals(memberId))
 			.findFirst()
 			.orElseThrow(() -> new BaseException(SCORE_NOT_FOUND))
-			.setScore(totalScore + 1000L);
-		// 정답자 목록에 추가
-		List<String> correctMembers = game.getCorrectMembers();
+			.setScore(totalScore + addedScore);
 		correctMembers.add(memberId);
 
 		game = game.toBuilder()
@@ -276,8 +277,8 @@ public class GameChatService {
 		// 정답 알림 pub
 		CorrectAnswerDto correctAnswerDto = CorrectAnswerDto.builder()
 			.member(member)
-			.score(1000L)
-			.totalScore(totalScore + 1000L)
+			.score(addedScore)
+			.totalScore(totalScore + addedScore)
 			.build();
 
 		messagePublisher.publishGameToRoom(CORRECT_ANSWER.name(), roomNumber, correctAnswerDto);
