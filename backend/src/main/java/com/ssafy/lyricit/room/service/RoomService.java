@@ -165,10 +165,6 @@ public class RoomService {
 		messagePublisher.publishInOutMessageToRoom(isIn, roomNumber, memberInGameDto.getMember().nickname());
 
 		if (isLeaderChanged) {
-			if (roomDto.getMembers().get(0).getIsReady()) {
-				ready(roomDto.getLeaderId(), roomNumber);
-			}
-
 			messagePublisher.publishLeaderChangedToRoom(roomNumber, roomDto.getLeaderId());
 		}
 	}
