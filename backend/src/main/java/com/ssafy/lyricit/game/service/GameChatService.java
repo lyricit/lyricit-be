@@ -169,18 +169,18 @@ public class GameChatService {
 		String title = game.getHighlightDto().getTitle();
 
 		// 엘라스틱 서치에 검색하기
-		// ElasticSearchResponseDto response = searchService.searchAnswer(lyric, title, chatRequest.content());
-		//
-		// RoomDto room = roomService.validateRoom(roomNumber);
-		//
-		// assert response != null;
-		// if (response.getHits().getTotal().getValue() == 0) {
-		// 	// 검색결과 없으면 오답처리
-		// 	handleIncorrectAnswer(roomNumber, memberId, room);
-		// } else {
-		// 	// 검색결과 있으면 정답처리
-		// 	handleCorrectAnswer(roomNumber, memberId, room, game, response);
-		// }
+		ElasticSearchResponseDto response = searchService.searchAnswer(lyric, title, chatRequest.content());
+
+		RoomDto room = roomService.validateRoom(roomNumber);
+
+		assert response != null;
+		if (response.getHits().getTotal().getValue() == 0) {
+			// 검색결과 없으면 오답처리
+			handleIncorrectAnswer(roomNumber, memberId, room);
+		} else {
+			// 검색결과 있으면 정답처리
+			handleCorrectAnswer(roomNumber, memberId, room, game, response);
+		}
 	}
 
 	// 방에 게임 채팅 뿌리는 메서드
