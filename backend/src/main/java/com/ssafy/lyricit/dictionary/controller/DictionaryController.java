@@ -34,6 +34,6 @@ public class DictionaryController {
 	@Operation(summary = "노래 상세 조회")
 	@GetMapping("/detail/{trackId}")
 	public ResponseEntity<TrackDetailDto> getTrackDetail(@PathVariable("trackId") String trackId) {
-		return ResponseEntity.ok(dictionaryService.readTrackDeatil(trackId));
+		return ResponseEntity.ok(dictionaryService.readTrackDetail(trackId));
 	}
 }
