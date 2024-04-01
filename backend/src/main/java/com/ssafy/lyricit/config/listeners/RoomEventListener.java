@@ -24,9 +24,14 @@ public class RoomEventListener {
 		if (roomService.validateRoom(roomNumber).getIsPlaying()) {
 			GameDto gameDto = roundService.validateGame(roomNumber);
 			gameDto.getMembers().removeIf(scoreDto -> scoreDto.getMemberId().equals(event.getMemberId()));
+			if (gameDto.getMembers().isEmpty()) {
+				roundService.endGame(roomNumber, gameDto);
+				gameRedisTemplate.delete(roomNumber);
+				roomService.exitRoom(event.getMemberId(), roomNumber);
+				return;
+			}
 			gameRedisTemplate.opsForValue().set(roomNumber, gameDto);
+			roomService.exitRoom(event.getMemberId(), roomNumber);
 		}
-
-		roomService.exitRoom(event.getMemberId(), roomNumber);
 	}
 }
