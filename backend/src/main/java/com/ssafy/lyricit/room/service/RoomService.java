@@ -87,6 +87,11 @@ public class RoomService {
 			.orElseThrow(() -> new BaseException(MEMBER_NOT_FOUND))
 			.toInGameDto();
 
+		// if member is a leader, set ready
+		if(roomDto.getLeaderId().equals(memberId)) {
+			memberInGameDto.setIsReady(true);
+		}
+
 		// add member to room
 		roomDto.getMembers().add(memberInGameDto);
 		roomDto.setPlayerCount(roomDto.getPlayerCount() + 1);
@@ -123,8 +128,8 @@ public class RoomService {
 		// leader change
 		if (roomDto.getLeaderId().equals(memberId)) { // if leader exited
 			roomDto.setLeaderId(roomDto.getMembers().get(0).getMember().memberId()); // next member get leader
-			// isReady false for leader
-			roomDto.getMembers().get(0).setIsReady(false);
+			// isReady true for leader
+			roomDto.getMembers().get(0).setIsReady(true);
 			isLeaderChanged = true;
 		}
 
