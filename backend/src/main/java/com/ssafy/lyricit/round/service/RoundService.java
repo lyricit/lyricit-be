@@ -7,6 +7,9 @@ import static com.ssafy.lyricit.game.constant.JobName.*;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -26,8 +29,8 @@ import com.ssafy.lyricit.exception.BaseException;
 import com.ssafy.lyricit.game.dto.GameDto;
 import com.ssafy.lyricit.game.dto.HighlightDto;
 import com.ssafy.lyricit.game.dto.ScoreDto;
-import com.ssafy.lyricit.keyword.repository.KeywordRepository;
 import com.ssafy.lyricit.keyword.domain.Keyword;
+import com.ssafy.lyricit.keyword.repository.KeywordRepository;
 import com.ssafy.lyricit.room.dto.RoomDto;
 import com.ssafy.lyricit.room.service.RoomService;
 import com.ssafy.lyricit.round.job.RoundEndJob;
@@ -44,6 +47,7 @@ public class RoundService {
 	private final KeywordRepository keywordRepository;
 	private final Scheduler scheduler;
 	private final MessagePublisher messagePublisher;
+	private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 	private static final Random random = new Random();
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
@@ -121,8 +125,14 @@ public class RoundService {
 			scheduler.deleteJob(endJobKey);// delete round end job
 		}
 
-		messagePublisher.publishGameToRoom(ROUND_ENDED.name(), roomNumber);
-		addRoundSchedule(roomNumber);// schedule next round
+		executor.schedule(() -> {
+			messagePublisher.publishGameToRoom(ROUND_ENDED.name(), roomNumber);
+			try {
+				addRoundSchedule(roomNumber);// schedule next round
+			} catch (SchedulerException e) {
+				throw new BaseException(ROUND_START_FAIL);
+			}
+		}, 2, TimeUnit.SECONDS);
 	}
 
 	// end round if roundTime is over -> next round

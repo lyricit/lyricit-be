@@ -36,6 +36,7 @@ public enum ErrorCode {
 	TRACK_NOT_FOUND(404, "조회하는 Track ID가 존재하지 않습니다."),
 	// Round
 	ROUND_NOT_FOUND(404, "라운드를 찾을 수 없습니다."),
+	ROUND_START_FAIL(500, "라운드 시작에 실패했습니다."),
 	ROUND_END_FAIL(500, "라운드 종료에 실패했습니다."),
 
 	// Score
