@@ -32,6 +32,8 @@ public enum ErrorCode {
 	NOT_ALL_READY(409, "전원이 레디 상태여야 게임 시작이 가능합니다."),
 	KEYWORD_NOT_FOUND(404, "키워드를 찾을 수 없습니다."),
 
+	// ElasticSearch
+	TRACK_NOT_FOUND(404, "조회하는 Track ID가 존재하지 않습니다."),
 	// Round
 	ROUND_NOT_FOUND(404, "라운드를 찾을 수 없습니다."),
 	ROUND_END_FAIL(500, "라운드 종료에 실패했습니다."),
