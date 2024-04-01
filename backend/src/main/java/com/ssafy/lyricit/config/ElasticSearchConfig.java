@@ -22,7 +22,7 @@ public class ElasticSearchConfig {
 	@Value("${spring.data.elasticsearch.url}")
 	private String serverUrl;
 
-	@Value("${spring.data.elasticsearch.apikey}")
+	@Value("${elasticsearch.apikey}")
 	private String apiKey;
 
 
