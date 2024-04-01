@@ -1,4 +1,4 @@
-package com.ssafy.lyricit.game.dto;
+package com.ssafy.lyricit.Search.dto;
 
 import lombok.Getter;
 import lombok.Setter;
