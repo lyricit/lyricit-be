@@ -1,10 +1,14 @@
 package com.ssafy.lyricit.Search.service;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import com.ssafy.lyricit.Search.dto.AnswerSearchDto;
 import com.ssafy.lyricit.Search.dto.ElasticSearchResponseDto;
 import com.ssafy.lyricit.Search.dto.LyricSearchDto;
 
@@ -32,6 +36,27 @@ public class SearchService {
 			.build();
 
 		return getSearchResponse(lyricSearchDto);
+	}
+
+	public ElasticSearchResponseDto searchAnswer(String lyrics, String title, String artist) {
+
+		List<Object> must = new ArrayList<>();
+		must.add(AnswerSearchDto.Match.builder().match(AnswerSearchDto.Title.builder().title(title).build()).build());
+		must.add(
+			AnswerSearchDto.Match.builder().match(AnswerSearchDto.Artist.builder().artist(artist).build()).build());
+		must.add(AnswerSearchDto.MatchPhrase.builder()
+			.match_phrase(AnswerSearchDto.Lyrics.builder().lyrics(lyrics).build())
+			.build());
+
+		AnswerSearchDto answerSearchDto = AnswerSearchDto.builder()
+			.query(AnswerSearchDto.Query.builder()
+				.bool(AnswerSearchDto.Bool.builder()
+					.Must(must)
+					.build())
+				.build())
+			.build();
+
+		return getSearchResponse(answerSearchDto);
 	}
 
 	private ElasticSearchResponseDto getSearchResponse(Object requestBody) {
