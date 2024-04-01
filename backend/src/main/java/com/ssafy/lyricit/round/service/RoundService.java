@@ -49,6 +49,7 @@ public class RoundService {
 	private final MessagePublisher messagePublisher;
 	private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 	private static final Random random = new Random();
+	private final int DELAY = 2000;
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
 	// round start after 2 seconds
@@ -67,7 +68,7 @@ public class RoundService {
 			.withIdentity(START_JOB.getValue() + roomNumber, JOB_GROUP.getValue())
 			.usingJobData(ROOM_NUMBER.getValue(), roomNumber)
 			.build();
-		Date startTime = new Date(System.currentTimeMillis() + 2000); // 2 seconds
+		Date startTime = new Date(System.currentTimeMillis() + DELAY); // 2 seconds
 
 		Trigger trigger = TriggerBuilder.newTrigger()
 			.withIdentity(START_JOB.getValue() + roomNumber, JOB_GROUP.getValue())
@@ -84,7 +85,7 @@ public class RoundService {
 			.usingJobData(ROOM_NUMBER.getValue(), roomNumber)
 			.build();
 		Date startTime = new Date(System.currentTimeMillis() +
-			validateGame(roomNumber).getRoundTime() * 1000);
+			validateGame(roomNumber).getRoundTime() * 1000 + DELAY);
 
 		Trigger trigger = TriggerBuilder.newTrigger()
 			.withIdentity(END_JOB.getValue() + roomNumber, JOB_GROUP.getValue())
