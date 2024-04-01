@@ -287,7 +287,7 @@ public class GameChatService {
 
 		// 해당 방의 전원이 정답을 맞추었다면 다음 라운드로 넘어가기
 		if (game.getCorrectMembers().size() == game.getPlayerCount()) {
-			roundService.cancelScheduledJobs(roomNumber);
+			roundService.cancelScheduledJobs(roomNumber, false);
 		} else {
 			// 2초 후 하이라이트 취소 메서드 호출
 			scheduler.schedule(() -> cancelHighlight(roomNumber), 2, TimeUnit.SECONDS);

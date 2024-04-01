@@ -114,7 +114,7 @@ public class RoundService {
 	}
 
 	// cancel round if every member correct -> next round
-	public void cancelScheduledJobs(String roomNumber) throws SchedulerException {
+	public void cancelScheduledJobs(String roomNumber, boolean isAllCanceled) throws SchedulerException {
 		JobKey startJobKey = JobKey.jobKey(START_JOB.getValue() + roomNumber, JOB_GROUP.getValue());
 		if (scheduler.checkExists(startJobKey)) {
 			scheduler.deleteJob(startJobKey);// delete round start job
@@ -123,6 +123,10 @@ public class RoundService {
 		JobKey endJobKey = JobKey.jobKey(END_JOB.getValue() + roomNumber, JOB_GROUP.getValue());
 		if (scheduler.checkExists(endJobKey)) {
 			scheduler.deleteJob(endJobKey);// delete round end job
+		}
+
+		if (isAllCanceled) {
+			return;
 		}
 
 		executor.schedule(() -> {

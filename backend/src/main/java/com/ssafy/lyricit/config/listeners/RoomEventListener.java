@@ -1,5 +1,6 @@
 package com.ssafy.lyricit.config.listeners;
 
+import org.quartz.SchedulerException;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
@@ -19,13 +20,13 @@ public class RoomEventListener {
 	private final RedisTemplate<String, GameDto> gameRedisTemplate;
 
 	@EventListener
-	public void handleRoomEvent(RoomEvent event) {
+	public void handleRoomEvent(RoomEvent event) throws SchedulerException {
 		String roomNumber = event.getRoomNumber();
 		if (roomService.validateRoom(roomNumber).getIsPlaying()) {
 			GameDto gameDto = roundService.validateGame(roomNumber);
 			gameDto.getMembers().removeIf(scoreDto -> scoreDto.getMemberId().equals(event.getMemberId()));
 			if (gameDto.getMembers().isEmpty()) {
-				roundService.endGame(roomNumber, gameDto);
+				roundService.cancelScheduledJobs(roomNumber, true);
 				gameRedisTemplate.delete(roomNumber);
 				roomService.exitRoom(event.getMemberId(), roomNumber);
 				return;
