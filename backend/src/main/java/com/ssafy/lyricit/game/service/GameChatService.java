@@ -109,7 +109,9 @@ public class GameChatService {
 			// 정답이 없는 경우 그냥 메세지 처리
 			sendGameChatMessage(chatRequest);
 		} else if (response.getHits().getTotal().getValue() > 0) {
-			// 정답이 있는 경우는 하이라이트 상태로 전환
+			// 정답이 있는 경우 채팅메세지 뿌리고 하이라이트로 전환
+			sendGameChatMessage(chatRequest);
+
 			HighlightDto highlightInfo = game.getHighlightDto();
 			highlightInfo = highlightInfo.toBuilder()
 				.memberId(memberId)
