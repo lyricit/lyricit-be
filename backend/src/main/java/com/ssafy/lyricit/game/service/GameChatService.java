@@ -204,7 +204,7 @@ public class GameChatService {
 			handleIncorrectAnswer(roomNumber, memberId, room);
 		} else {
 			// 검색결과 있으면 정답처리
-			handleCorrectAnswer(roomNumber, memberId, room, game);
+			handleCorrectAnswer(roomNumber, memberId, room, game, response);
 		}
 	}
 
@@ -241,7 +241,7 @@ public class GameChatService {
 	// 해당 멤버 점수정보 및 정답자 목록을 갱신하고, 정답알림을 방에 pub함
 	// 만약, 해당 방에 모든 사람이 정답을 맞췄다면, 다음 라운드로 넘어가는 메서드 호출
 	// 그렇지 않다면, 2초 후 하이라이트 취소 메서드 호출
-	private void handleCorrectAnswer(String roomNumber, String memberId, RoomDto room, GameDto game) throws
+	private void handleCorrectAnswer(String roomNumber, String memberId, RoomDto room, GameDto game, ElasticSearchResponseDto response) throws
 		SchedulerException {
 		// 하이라이트 시간제한 스케줄링 취소
 		cancelHighlightTask(roomNumber);
@@ -279,6 +279,8 @@ public class GameChatService {
 			.member(member)
 			.score(addedScore)
 			.totalScore(totalScore + addedScore)
+			.answerTitle(response.getHits().getHits()[0].get_source().getTitle())
+			.answerArtist(response.getHits().getHits()[0].get_source().getArtist())
 			.build();
 
 		messagePublisher.publishGameToRoom(CORRECT_ANSWER.name(), roomNumber, correctAnswerDto);

@@ -8,6 +8,8 @@ import lombok.Builder;
 public record CorrectAnswerDto(
 	MemberDto member,
 	Long score,
-	Long totalScore
+	Long totalScore,
+	String answerTitle,
+	String answerArtist
 ) {
 }
