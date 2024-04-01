@@ -17,14 +17,14 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.ssafy.lyricit.Search.service.SearchService;
+import com.ssafy.lyricit.search.service.SearchService;
 import com.ssafy.lyricit.chat.dto.RoomChatRequestDto;
 import com.ssafy.lyricit.chat.dto.RoomChatResponseDto;
 import com.ssafy.lyricit.common.MessagePublisher;
 import com.ssafy.lyricit.exception.BaseException;
 import com.ssafy.lyricit.game.constant.ScoreValue;
 import com.ssafy.lyricit.game.dto.CorrectAnswerDto;
-import com.ssafy.lyricit.Search.dto.ElasticSearchResponseDto;
+import com.ssafy.lyricit.search.dto.ElasticSearchResponseDto;
 import com.ssafy.lyricit.game.dto.GameDto;
 import com.ssafy.lyricit.game.dto.HighlightDto;
 import com.ssafy.lyricit.game.dto.HighlightNoticeDto;

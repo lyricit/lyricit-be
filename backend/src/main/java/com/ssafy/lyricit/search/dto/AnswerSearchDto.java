@@ -1,4 +1,4 @@
-package com.ssafy.lyricit.Search.dto;
+package com.ssafy.lyricit.search.dto;
 
 import java.util.List;
 

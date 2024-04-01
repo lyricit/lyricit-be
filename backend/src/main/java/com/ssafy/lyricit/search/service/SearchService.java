@@ -1,4 +1,4 @@
-package com.ssafy.lyricit.Search.service;
+package com.ssafy.lyricit.search.service;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,9 +8,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import com.ssafy.lyricit.Search.dto.AnswerSearchDto;
-import com.ssafy.lyricit.Search.dto.ElasticSearchResponseDto;
-import com.ssafy.lyricit.Search.dto.LyricSearchDto;
+import com.ssafy.lyricit.search.dto.AnswerSearchDto;
+import com.ssafy.lyricit.search.dto.ElasticSearchResponseDto;
+import com.ssafy.lyricit.search.dto.LyricSearchDto;
 
 import lombok.RequiredArgsConstructor;
 
