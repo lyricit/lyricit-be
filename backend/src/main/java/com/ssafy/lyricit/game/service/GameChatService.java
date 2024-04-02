@@ -185,18 +185,16 @@ public class GameChatService {
 
 		RoomDto room = roomService.validateRoom(roomNumber);
 
-
-		// 이미 정답 목록에 있는 곡인 경우
-		if (game.getAnswerTracks().contains(response.getHits().getHits()[0].get_id())) {
-			handleIncorrectAnswer(roomNumber, memberId, room);
-			return;
-		}
-
 		assert response != null;
 		if (response.getHits().getTotal().getValue() == 0) {
 			// 검색결과 없으면 오답처리
 			handleIncorrectAnswer(roomNumber, memberId, room);
 		} else {
+			// 이미 정답 목록에 있는 곡인 경우
+			if (game.getAnswerTracks().contains(response.getHits().getHits()[0].get_id())) {
+				handleIncorrectAnswer(roomNumber, memberId, room);
+				return;
+			}
 			// 검색결과 있으면 정답처리
 			handleCorrectAnswer(roomNumber, memberId, room, game, response);
 		}
