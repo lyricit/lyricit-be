@@ -17,14 +17,12 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.ssafy.lyricit.search.service.SearchService;
 import com.ssafy.lyricit.chat.dto.RoomChatRequestDto;
 import com.ssafy.lyricit.chat.dto.RoomChatResponseDto;
 import com.ssafy.lyricit.common.MessagePublisher;
 import com.ssafy.lyricit.exception.BaseException;
 import com.ssafy.lyricit.game.constant.ScoreValue;
 import com.ssafy.lyricit.game.dto.CorrectAnswerDto;
-import com.ssafy.lyricit.search.dto.ElasticSearchResponseDto;
 import com.ssafy.lyricit.game.dto.GameDto;
 import com.ssafy.lyricit.game.dto.HighlightDto;
 import com.ssafy.lyricit.game.dto.HighlightNoticeDto;
@@ -32,6 +30,8 @@ import com.ssafy.lyricit.member.dto.MemberDto;
 import com.ssafy.lyricit.room.dto.RoomDto;
 import com.ssafy.lyricit.room.service.RoomService;
 import com.ssafy.lyricit.round.service.RoundService;
+import com.ssafy.lyricit.search.dto.ElasticSearchResponseDto;
+import com.ssafy.lyricit.search.service.SearchService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -152,6 +152,10 @@ public class GameChatService {
 	// 하이라이트 상태에서 제목을 입력받았을 때 실행되는 메서드
 	// 해당 제목을 redis 에 갱신하고, 입력받았던 제목을 방에 pub
 	private void handleTitle(RoomChatRequestDto chatRequest, GameDto game) {
+
+		// 채팅메세지 전달
+		sendGameChatMessage(chatRequest);
+
 		String roomNumber = chatRequest.roomNumber();
 
 		// 입력받은 제목 정보 redis 에 갱신
@@ -175,6 +179,9 @@ public class GameChatService {
 	// 가사 + 제목 + 가수 가 일치하는 곡이 있는 지 확인 -> Elastic Search 에서 검색
 	// 검색결과가 없으면 오답처리, 있으면 정답처리
 	private void checkAnswer(RoomChatRequestDto chatRequest, GameDto game) throws SchedulerException {
+
+		// 채팅메세지 전달
+		sendGameChatMessage(chatRequest);
 
 		String roomNumber = chatRequest.roomNumber();
 		String memberId = chatRequest.memberId();
@@ -233,7 +240,6 @@ public class GameChatService {
 		scheduler.schedule(() -> cancelHighlight(roomNumber), 2, TimeUnit.SECONDS);
 	}
 
-
 	// 오답 처리 진행하는 메서드
 	// 방에 오답 알림 pub 하고 2초 후 하이라이트 취소 메서드 호출
 	private void handleIncorrectAnswer(String roomNumber, String memberId, RoomDto room) {
@@ -250,7 +256,8 @@ public class GameChatService {
 			.getMember();
 
 		// 2초 뒤 오답 알림 pub
-		scheduler.schedule(() -> messagePublisher.publishGameToRoom(INCORRECT_ANSWER.name(), roomNumber, member), 2, TimeUnit.SECONDS);
+		scheduler.schedule(() -> messagePublisher.publishGameToRoom(INCORRECT_ANSWER.name(), roomNumber, member), 2,
+			TimeUnit.SECONDS);
 
 		// 2초 후 하이라이트 취소 메서드 호출
 		scheduler.schedule(() -> cancelHighlight(roomNumber), 4, TimeUnit.SECONDS);
@@ -260,7 +267,8 @@ public class GameChatService {
 	// 해당 멤버 점수정보 및 정답자 목록을 갱신하고, 정답알림을 방에 pub 함
 	// 만약, 해당 방에 모든 사람이 정답을 맞췄다면, 다음 라운드로 넘어가는 메서드 호출
 	// 그렇지 않다면, 2초 후 하이라이트 취소 메서드 호출
-	private void handleCorrectAnswer(String roomNumber, String memberId, RoomDto room, GameDto game, ElasticSearchResponseDto response) throws
+	private void handleCorrectAnswer(String roomNumber, String memberId, RoomDto room, GameDto game,
+		ElasticSearchResponseDto response) throws
 		SchedulerException {
 		// 하이라이트 시간제한 스케줄링 취소
 		cancelHighlightTask(roomNumber);
@@ -306,7 +314,9 @@ public class GameChatService {
 			.build();
 
 		// 2초 뒤 정답 알림
-		scheduler.schedule(() -> messagePublisher.publishGameToRoom(CORRECT_ANSWER.name(), roomNumber, correctAnswerDto), 2, TimeUnit.SECONDS);
+		scheduler.schedule(
+			() -> messagePublisher.publishGameToRoom(CORRECT_ANSWER.name(), roomNumber, correctAnswerDto), 2,
+			TimeUnit.SECONDS);
 
 		// 해당 방의 전원이 정답을 맞추었다면 다음 라운드로 넘어가기
 		if (game.getCorrectMembers().size() == game.getPlayerCount()) {
