@@ -42,7 +42,7 @@ public class DictionaryService {
 		return TrackDetailDto.builder()
 			.title(trackDocument.getTitle())
 			.artist(trackDocument.getArtist())
-			.imageUrl(trackDocument.getSpotifyInfo().getAlbumUrl().getImageSize300())
+			.imageUrl(trackDocument.getSpotifyInfo().getAlbumUrl().getImageSize64())
 			.lyrics(trackDocument.getLyrics())
 			.build();
 	}
