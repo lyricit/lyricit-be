@@ -66,6 +66,12 @@ public class GameChatService {
 		// 게임 정보 불러오기
 		GameDto game = roundService.validateGame(roomNumber);
 
+		// 이미 게임을 맞춘 유저라면 그냥 메시지 전달
+		if (game.getCorrectMembers().contains(memberId)) {
+			sendGameChatMessage(chatRequest);
+			return;
+		}
+
 		// highlight 상태인지 확인
 		if (game.getHighlightDto().getMemberId().isEmpty()) {
 			handleLyric(chatRequest, game);
