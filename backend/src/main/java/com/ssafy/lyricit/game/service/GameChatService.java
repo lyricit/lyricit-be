@@ -135,7 +135,7 @@ public class GameChatService {
 			RoomDto room = roomService.validateRoom(roomNumber);
 			// 하이라이트 시간제한 스케줄링 (15초 이내에 정답을 맞추지 못하면 오답처리)
 			ScheduledFuture<?> highlightTask = scheduler.schedule(
-				() -> handleIncorrectAnswer(roomNumber, memberId, room),
+				() -> handleTimeOver(roomNumber, memberId, room),
 				15L,
 				TimeUnit.SECONDS);
 
@@ -185,18 +185,16 @@ public class GameChatService {
 
 		RoomDto room = roomService.validateRoom(roomNumber);
 
-
-		// 이미 정답 목록에 있는 곡인 경우
-		if (game.getAnswerTracks().contains(response.getHits().getHits()[0].get_id())) {
-			handleIncorrectAnswer(roomNumber, memberId, room);
-			return;
-		}
-
 		assert response != null;
 		if (response.getHits().getTotal().getValue() == 0) {
 			// 검색결과 없으면 오답처리
 			handleIncorrectAnswer(roomNumber, memberId, room);
 		} else {
+			// 이미 정답 목록에 있는 곡인 경우
+			if (game.getAnswerTracks().contains(response.getHits().getHits()[0].get_id())) {
+				handleIncorrectAnswer(roomNumber, memberId, room);
+				return;
+			}
 			// 검색결과 있으면 정답처리
 			handleCorrectAnswer(roomNumber, memberId, room, game, response);
 		}
@@ -208,6 +206,27 @@ public class GameChatService {
 
 		messagePublisher.publishMessageToGame(chatRequest.roomNumber(), response);
 	}
+
+	// Highlioght 시간제한이 모두 지나면 실행
+	private void handleTimeOver(String roomNumber, String memberId, RoomDto room) {
+		// 하이라이트 시간제한 스케줄링 취소
+		cancelHighlightTask(roomNumber);
+		log.info("roomNumber : " + roomNumber);
+
+		// 해당 멤버 정보
+		MemberDto member = room.getMembers().stream()
+			.filter(memberInGameDto -> memberInGameDto.getMember().memberId().equals(memberId))
+			.findFirst()
+			.orElseThrow(() -> new BaseException(MEMBER_NOT_FOUND))
+			.getMember();
+
+		// 오답 알림 pub
+		messagePublisher.publishGameToRoom(INCORRECT_ANSWER.name(), roomNumber, member);
+
+		// 2초 후 하이라이트 취소 메서드 호출
+		scheduler.schedule(() -> cancelHighlight(roomNumber), 2, TimeUnit.SECONDS);
+	}
+
 
 	// 오답 처리 진행하는 메서드
 	// 방에 오답 알림 pub 하고 2초 후 하이라이트 취소 메서드 호출
