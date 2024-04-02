@@ -125,7 +125,12 @@ public class ChannelInboundInterceptor implements ChannelInterceptor {
 	@Async
 	public void disconnect(StompHeaderAccessor header) {
 		// remove online member from redis template
-		String memberId = header.getSessionAttributes().get(MEMBER_ID.getValue()).toString();
+		Object memberIdObj = header.getSessionAttributes().get(MEMBER_ID.getValue());
+		if (memberIdObj == null) {
+			throw new BaseException(HEADER_NOT_FOUND);
+		}
+
+		String memberId = memberIdObj.toString();
 		String roomNumber = header.getSessionAttributes().get(ROOM_NUMBER.getValue()).toString();
 
 		if (memberId == null || memberId.isBlank() || Boolean.FALSE.equals(memberRedisTemplate.hasKey(memberId))) {
