@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.ssafy.lyricit.common.MessagePublisher;
+import com.ssafy.lyricit.config.events.GameEndEvent;
 import com.ssafy.lyricit.config.events.HighlightCancelEvent;
 import com.ssafy.lyricit.exception.BaseException;
 import com.ssafy.lyricit.game.dto.GameDto;
@@ -165,6 +166,9 @@ public class RoundService {
 			.toList();
 
 		messagePublisher.publishGameToRoom(GAME_ENDED.name(), roomNumber, sortedMembers);
+
+		eventPublisher.publishEvent(new GameEndEvent(this, roomNumber));// set isPlaying false
+
 		gameRedisTemplate.delete(roomNumber);
 	}
 
