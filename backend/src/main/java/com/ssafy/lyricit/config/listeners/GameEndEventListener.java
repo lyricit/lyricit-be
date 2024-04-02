@@ -1,9 +1,13 @@
 package com.ssafy.lyricit.config.listeners;
 
+import static com.ssafy.lyricit.common.type.EventType.*;
+
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import com.ssafy.lyricit.common.MessagePublisher;
 import com.ssafy.lyricit.config.events.GameEndEvent;
+import com.ssafy.lyricit.room.dto.RoomDto;
 import com.ssafy.lyricit.room.service.RoomService;
 
 import lombok.RequiredArgsConstructor;
@@ -12,10 +16,13 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class GameEndEventListener {
 	private final RoomService roomService;
+	private final MessagePublisher messagePublisher;
 
 	@EventListener
 	public void handleGameEndEvent(GameEndEvent event) {
 		String roomNumber = event.getRoomNumber();
-		roomService.validateRoom(roomNumber).setIsPlaying(false);
+		RoomDto roomDto = roomService.validateRoom(roomNumber);
+		roomDto.setIsPlaying(false);
+		messagePublisher.publishRoomToLounge(ROOM_UPDATED.name(), roomDto);
 	}
 }
