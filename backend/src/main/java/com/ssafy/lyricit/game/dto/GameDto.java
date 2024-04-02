@@ -21,6 +21,7 @@ import lombok.Setter;
 public class GameDto {
 	private Long playerCount;
 	private Long roundTime;
+	private Long roundLimit;
 	private Long currentRound;
 	private String keyword;
 	private HighlightDto highlightDto;
@@ -39,6 +40,7 @@ public class GameDto {
 		return GameDto.builder()
 			.playerCount(roomDto.getPlayerCount())
 			.roundTime(roomDto.getRoundTime())
+			.roundLimit(roomDto.getRoundLimit())
 			.currentRound(0L)
 			.keyword("")
 			.correctMembers(new ArrayList<>())

@@ -54,7 +54,7 @@ public class RoomController {
 	@DeleteMapping("/{roomNumber}")
 	public ResponseEntity<Void> exitRoom(
 		@RequestHeader String memberId,
-		@PathVariable String roomNumber) {
+		@PathVariable String roomNumber) throws SchedulerException {
 		roomService.exitRoom(memberId, roomNumber);
 		return ResponseEntity.ok().build();
 	}

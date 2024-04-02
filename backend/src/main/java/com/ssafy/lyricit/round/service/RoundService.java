@@ -31,8 +31,6 @@ import com.ssafy.lyricit.game.dto.HighlightDto;
 import com.ssafy.lyricit.game.dto.ScoreDto;
 import com.ssafy.lyricit.keyword.domain.Keyword;
 import com.ssafy.lyricit.keyword.repository.KeywordRepository;
-import com.ssafy.lyricit.room.dto.RoomDto;
-import com.ssafy.lyricit.room.service.RoomService;
 import com.ssafy.lyricit.round.job.RoundEndJob;
 import com.ssafy.lyricit.round.job.RoundStartJob;
 
@@ -43,7 +41,6 @@ import lombok.RequiredArgsConstructor;
 @Transactional
 public class RoundService {
 	private final RedisTemplate<String, GameDto> gameRedisTemplate;
-	private final RoomService roomService;
 	private final KeywordRepository keywordRepository;
 	private final Scheduler scheduler;
 	private final MessagePublisher messagePublisher;
@@ -173,9 +170,8 @@ public class RoundService {
 	}
 
 	public boolean isGameEnd(String roomNumber) {
-		RoomDto roomDto = roomService.validateRoom(roomNumber);
 		GameDto gameDto = validateGame(roomNumber);
-		return gameDto.getCurrentRound() >= roomDto.getRoundLimit();
+		return gameDto.getCurrentRound() >= gameDto.getRoundLimit();
 	}
 
 	// get random keyword from db

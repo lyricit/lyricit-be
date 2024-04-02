@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.ssafy.lyricit.common.MessagePublisher;
 import com.ssafy.lyricit.exception.BaseException;
+import com.ssafy.lyricit.game.dto.GameDto;
 import com.ssafy.lyricit.member.domain.Member;
 import com.ssafy.lyricit.member.dto.MemberDto;
 import com.ssafy.lyricit.member.dto.MemberInGameDto;
@@ -26,6 +28,7 @@ import com.ssafy.lyricit.room.dto.RoomOutsideDto;
 import com.ssafy.lyricit.room.dto.RoomPasswordDto;
 import com.ssafy.lyricit.room.dto.RoomRequestDto;
 import com.ssafy.lyricit.room.repository.RoomRepository;
+import com.ssafy.lyricit.round.service.RoundService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -34,6 +37,8 @@ import lombok.RequiredArgsConstructor;
 @Transactional
 public class RoomService {
 	private final RedisTemplate<String, RoomDto> roomRedisTemplate;
+	private final RedisTemplate<String, GameDto> gameRedisTemplate;
+	private final RoundService roundService;
 	private final RoomRepository roomRepository;
 	private final MemberRepository memberRepository;
 	private final MessagePublisher messagePublisher;
@@ -88,7 +93,7 @@ public class RoomService {
 			.toInGameDto();
 
 		// if member is a leader, set ready
-		if(roomDto.getLeaderId().equals(memberId)) {
+		if (roomDto.getLeaderId().equals(memberId)) {
 			memberInGameDto.setIsReady(true);
 		}
 
@@ -101,7 +106,7 @@ public class RoomService {
 		return roomDto.toInsideDto(roomNumber);
 	}
 
-	public void exitRoom(String memberId, String roomNumber) {
+	public void exitRoom(String memberId, String roomNumber) throws SchedulerException {
 		if (roomNumber.equals("0")) {
 			return;
 		}
@@ -121,6 +126,12 @@ public class RoomService {
 		// if room empty
 		if (roomDto.getPlayerCount() == 0) {
 			deleteRoom(roomNumber, roomDto);
+			// delete game if exist
+			if (Boolean.TRUE.equals(gameRedisTemplate.hasKey(roomNumber))) {
+				gameRedisTemplate.delete(roomNumber);
+			}
+			// delete game schedule if exist
+			roundService.cancelScheduledJobs(roomNumber, true);
 			return;
 		}
 
@@ -171,7 +182,7 @@ public class RoomService {
 
 	public void ready(String memberId, String roomNumber) {
 		RoomDto roomDto = validateRoom(roomNumber);
-		if(roomDto.getLeaderId().equals(memberId)) {
+		if (roomDto.getLeaderId().equals(memberId)) {
 			throw new BaseException(LEADER_CANNOT_READY);
 		}
 
