@@ -22,7 +22,7 @@ public class RoomEventListener {
 	@EventListener
 	public void handleRoomEvent(RoomEvent event) throws SchedulerException {
 		String roomNumber = event.getRoomNumber();
-		if (roomService.validateRoom(roomNumber).getIsPlaying()) {
+		if (!roomNumber.equals("0") && roomService.validateRoom(roomNumber).getIsPlaying()) {
 			GameDto gameDto = roundService.validateGame(roomNumber);
 			gameDto.getMembers().removeIf(scoreDto -> scoreDto.getMemberId().equals(event.getMemberId()));
 			if (gameDto.getMembers().isEmpty()) {
