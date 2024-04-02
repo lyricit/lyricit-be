@@ -14,7 +14,6 @@ public enum ErrorCode {
 	MEMBER_ALREADY_EXIST(409, "이미 존재하는 회원입니다."),
 	MEMBER_ID_NOT_FOUND(404, "회원 ID를 찾을 수 없습니다."),
 	HEADER_NOT_SATISFIED(400, "헤더가 요구사항을 만족하지 못합니다."),
-	HEADER_NOT_FOUND(404, "헤더를 찾을 수 없습니다."),
 
 	// Message
 	MESSAGE_NOT_FOUND(404, "메세지를 찾을 수 없습니다."),
