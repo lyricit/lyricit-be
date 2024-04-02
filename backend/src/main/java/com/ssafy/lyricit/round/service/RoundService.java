@@ -20,11 +20,13 @@ import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.ssafy.lyricit.common.MessagePublisher;
+import com.ssafy.lyricit.config.events.HighlightCancelEvent;
 import com.ssafy.lyricit.exception.BaseException;
 import com.ssafy.lyricit.game.dto.GameDto;
 import com.ssafy.lyricit.game.dto.HighlightDto;
@@ -43,6 +45,7 @@ public class RoundService {
 	private final RedisTemplate<String, GameDto> gameRedisTemplate;
 	private final KeywordRepository keywordRepository;
 	private final Scheduler scheduler;
+	private final ApplicationEventPublisher eventPublisher;
 	private final MessagePublisher messagePublisher;
 	private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 	private static final Random random = new Random();
@@ -146,6 +149,9 @@ public class RoundService {
 			if (scheduler.checkExists(jobKey)) {
 				scheduler.deleteJob(jobKey);
 			}
+
+			eventPublisher.publishEvent(new HighlightCancelEvent(this, roomNumber));// cancel highlight
+
 			messagePublisher.publishGameToRoom(ROUND_ENDED.name(), roomNumber);
 			addRoundSchedule(roomNumber);// schedule next round
 		} catch (SchedulerException e) {
