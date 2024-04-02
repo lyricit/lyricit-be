@@ -124,15 +124,19 @@ public class ChannelInboundInterceptor implements ChannelInterceptor {
 
 	@Async
 	public void disconnect(StompHeaderAccessor header) {
+		log.info("------------------Disconnect Start--------------------");
 		// remove online member from redis template
+		log.info("Disconnecting header: {}", header);
 		Object memberIdObj = header.getSessionAttributes().get(MEMBER_ID.getValue());
 		if (memberIdObj == null) {
 			log.info("Member ID not found in session attributes, skipping disconnect.");
 			return; // Early return if memberId is null
 		}
 
-		String memberId = memberIdObj.toString();
+		String memberId = header.getSessionAttributes().get(MEMBER_ID.getValue()).toString();
 		String roomNumber = header.getSessionAttributes().get(ROOM_NUMBER.getValue()).toString();
+		log.info("memberId: {}", memberId);
+		log.info("roomNumber: {}", roomNumber);
 
 		if (memberId == null || memberId.isBlank() || Boolean.FALSE.equals(memberRedisTemplate.hasKey(memberId))) {
 			throw new BaseException(MEMBER_ID_NOT_FOUND);
@@ -160,6 +164,7 @@ public class ChannelInboundInterceptor implements ChannelInterceptor {
 			, false
 		));
 		log.info("\nmemberId: {} disconnected from lounge!", memberId);
+		log.info("------------------Disconnect END--------------------");
 	}
 
 	private void unsubscribe(StompHeaderAccessor header) {
