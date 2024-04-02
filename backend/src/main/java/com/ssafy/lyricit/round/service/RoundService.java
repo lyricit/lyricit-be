@@ -96,6 +96,7 @@ public class RoundService {
 	public void initRound(String roomNumber, GameDto gameDto) {
 		Keyword keyword = getRandomKeyword();
 		gameDto.getCorrectMembers().clear();
+		gameDto.getAnswerTracks().clear();
 
 		// add round
 		gameDto = gameDto.toBuilder()
