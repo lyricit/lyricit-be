@@ -179,6 +179,13 @@ public class GameChatService {
 
 		RoomDto room = roomService.validateRoom(roomNumber);
 
+
+		// 이미 정답 목록에 있는 곡인 경우
+		if (game.getAnswerTracks().contains(response.getHits().getHits()[0].get_id())) {
+			handleIncorrectAnswer(roomNumber, memberId, room);
+			return;
+		}
+
 		assert response != null;
 		if (response.getHits().getTotal().getValue() == 0) {
 			// 검색결과 없으면 오답처리
@@ -241,6 +248,7 @@ public class GameChatService {
 
 		// redis 에 게임 정보 갱신
 		List<String> correctMembers = game.getCorrectMembers();
+		List<String> answerTracks = game.getAnswerTracks();
 		Long addedScore = ScoreValue.values()[correctMembers.size()].getValue();
 
 		game.getMembers().stream()
@@ -249,9 +257,11 @@ public class GameChatService {
 			.orElseThrow(() -> new BaseException(SCORE_NOT_FOUND))
 			.setScore(totalScore + addedScore);
 		correctMembers.add(memberId);
+		answerTracks.add(response.getHits().getHits()[0].get_id());
 
 		game = game.toBuilder()
 			.correctMembers(correctMembers)
+			.answerTracks(answerTracks)
 			.build();
 		gameRedisTemplate.opsForValue().set(roomNumber, game);
 
