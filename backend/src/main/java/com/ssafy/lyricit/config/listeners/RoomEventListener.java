@@ -22,16 +22,21 @@ public class RoomEventListener {
 	@EventListener
 	public void handleRoomEvent(RoomEvent event) throws SchedulerException {
 		String roomNumber = event.getRoomNumber();
-		if (!roomNumber.equals("0") && roomService.validateRoom(roomNumber).getIsPlaying()) {
-			GameDto gameDto = roundService.validateGame(roomNumber);
-			gameDto.getMembers().removeIf(scoreDto -> scoreDto.getMemberId().equals(event.getMemberId()));
-			if (gameDto.getMembers().isEmpty()) {
-				roundService.cancelScheduledJobs(roomNumber, true);
-				gameRedisTemplate.delete(roomNumber);
+		if (!roomNumber.equals("0")) {
+			if (roomService.validateRoom(roomNumber).getIsPlaying()) {
+				GameDto gameDto = roundService.validateGame(roomNumber);
+				gameDto.getMembers().removeIf(scoreDto -> scoreDto.getMemberId().equals(event.getMemberId()));
+				if (gameDto.getMembers().isEmpty()) {
+					roundService.cancelScheduledJobs(roomNumber, true);
+					gameRedisTemplate.delete(roomNumber);
+					roomService.exitRoom(event.getMemberId(), roomNumber);
+					return;
+				}
+				gameRedisTemplate.opsForValue().set(roomNumber, gameDto);
 				roomService.exitRoom(event.getMemberId(), roomNumber);
 				return;
 			}
-			gameRedisTemplate.opsForValue().set(roomNumber, gameDto);
+
 			roomService.exitRoom(event.getMemberId(), roomNumber);
 		}
 	}
