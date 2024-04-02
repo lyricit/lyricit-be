@@ -139,7 +139,7 @@ public class RoundService {
 			} catch (SchedulerException e) {
 				throw new BaseException(ROUND_START_FAIL);
 			}
-		}, 2, TimeUnit.SECONDS);
+		}, 4, TimeUnit.SECONDS);
 	}
 
 	// end round if roundTime is over -> next round
