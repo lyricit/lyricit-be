@@ -70,7 +70,8 @@ public class RoomService {
 
 		// check member already in room
 		if (roomDto.getMembers().stream().anyMatch(m -> m.getMember().memberId().equals(memberId))) {
-			throw new BaseException(MEMBER_ALREADY_EXIST);
+			// throw new BaseException(MEMBER_ALREADY_EXIST);
+			return roomDto.toInsideDto(roomNumber);
 		}
 
 		// check password
