@@ -63,6 +63,12 @@ public class GameChatService {
 		String roomNumber = chatRequest.roomNumber();
 		String memberId = chatRequest.memberId();
 
+		// 입력받은 채팅메세지가 8자 미만인 경우에는 바로 채팅메시지로 전달
+		if (chatRequest.content().length() < 8) {
+			sendGameChatMessage(chatRequest);
+			return;
+		}
+
 		// 게임 정보 불러오기
 		GameDto game = roundService.validateGame(roomNumber);
 
