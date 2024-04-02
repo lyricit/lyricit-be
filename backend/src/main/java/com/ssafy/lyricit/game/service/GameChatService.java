@@ -163,8 +163,12 @@ public class GameChatService {
 	// 가사 + 제목 + 가수 가 일치하는 곡이 있는 지 확인 -> Elastic Search 에서 검색
 	// 검색결과가 없으면 오답처리, 있으면 정답처리
 	private void checkAnswer(RoomChatRequestDto chatRequest, GameDto game) throws SchedulerException {
+
 		String roomNumber = chatRequest.roomNumber();
 		String memberId = chatRequest.memberId();
+
+		// 입력받은 가수정보 먼저 방에 뿌려주기
+		messagePublisher.publishGameToRoom(HIGHLIGHT_ARTIST.name(), roomNumber, chatRequest.content());
 
 		// 검색할 변수
 		String lyric = game.getHighlightDto().getLyric();
@@ -207,11 +211,11 @@ public class GameChatService {
 			.orElseThrow(() -> new BaseException(MEMBER_NOT_FOUND))
 			.getMember();
 
-		// 오답 알림 pub
-		messagePublisher.publishGameToRoom(INCORRECT_ANSWER.name(), roomNumber, member);
+		// 2초 뒤 오답 알림 pub
+		scheduler.schedule(() -> messagePublisher.publishGameToRoom(INCORRECT_ANSWER.name(), roomNumber, member), 2, TimeUnit.SECONDS);
 
 		// 2초 후 하이라이트 취소 메서드 호출
-		scheduler.schedule(() -> cancelHighlight(roomNumber), 2, TimeUnit.SECONDS);
+		scheduler.schedule(() -> cancelHighlight(roomNumber), 4, TimeUnit.SECONDS);
 	}
 
 	// 정답 맟췄을 시 진행하는 메서드
@@ -260,14 +264,15 @@ public class GameChatService {
 			.answerArtist(response.getHits().getHits()[0].get_source().getArtist())
 			.build();
 
-		messagePublisher.publishGameToRoom(CORRECT_ANSWER.name(), roomNumber, correctAnswerDto);
+		// 2초 뒤 정답 알림
+		scheduler.schedule(() -> messagePublisher.publishGameToRoom(CORRECT_ANSWER.name(), roomNumber, correctAnswerDto), 2, TimeUnit.SECONDS);
 
 		// 해당 방의 전원이 정답을 맞추었다면 다음 라운드로 넘어가기
 		if (game.getCorrectMembers().size() == game.getPlayerCount()) {
 			roundService.cancelScheduledJobs(roomNumber, false);
 		} else {
 			// 2초 후 하이라이트 취소 메서드 호출
-			scheduler.schedule(() -> cancelHighlight(roomNumber), 2, TimeUnit.SECONDS);
+			scheduler.schedule(() -> cancelHighlight(roomNumber), 4, TimeUnit.SECONDS);
 		}
 
 	}
