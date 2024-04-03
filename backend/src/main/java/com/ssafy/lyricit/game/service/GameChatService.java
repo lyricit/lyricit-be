@@ -108,7 +108,7 @@ public class GameChatService {
 		}
 
 		// 입력받은 채팅메세지가 8자 미만인 경우에는 바로 채팅메시지로 전달
-		if (content.length() < 8) {
+		if (content.trim().length() < 8) {
 			sendGameChatMessage(chatRequest);
 			return;
 		}
