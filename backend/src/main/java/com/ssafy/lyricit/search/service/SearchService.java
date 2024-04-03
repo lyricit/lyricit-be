@@ -27,36 +27,41 @@ public class SearchService {
 
 	public ElasticSearchResponseDto searchLyrics(String lyrics) {
 
-		LyricSearchDto lyricSearchDto = LyricSearchDto.builder()
-			.query(LyricSearchDto.Query.builder()
-				.match_phrase(LyricSearchDto.MatchPhrase.builder()
-					.lyrics(lyrics)
-					.build())
-				.build())
-			.build();
+		// v2
+		// LyricSearchDto lyricSearchDto = LyricSearchDto.builder()
+		// 	.query(LyricSearchDto.Query.builder()
+		// 		.match_phrase(LyricSearchDto.MatchPhrase.builder()
+		// 			.lyrics(lyrics)
+		// 			.build())
+		// 		.build())
+		// 	.build();
 
-		return getSearchResponse(lyricSearchDto);
+		String lyricSearchV3 = "{\"query\": {\"bool\": {\"must\": [{\"match_phrase\": {\"lyrics\": \""+ lyrics +"\" }},{\"match\": {\"lyrics.ngram\": \""+ lyrics +"\"}}]}}}";
+
+		return getSearchResponse(lyricSearchV3);
 	}
 
 	public ElasticSearchResponseDto searchAnswer(String lyrics, String title, String artist) {
 
-		List<Object> must = new ArrayList<>();
-		must.add(AnswerSearchDto.Match.builder().match(AnswerSearchDto.Title.builder().title(title).build()).build());
-		must.add(
-			AnswerSearchDto.Match.builder().match(AnswerSearchDto.Artist.builder().artist(artist).build()).build());
-		must.add(AnswerSearchDto.MatchPhrase.builder()
-			.match_phrase(AnswerSearchDto.Lyrics.builder().lyrics(lyrics).build())
-			.build());
+		// List<Object> must = new ArrayList<>();
+		// must.add(AnswerSearchDto.Match.builder().match(AnswerSearchDto.Title.builder().title(title).build()).build());
+		// must.add(
+		// 	AnswerSearchDto.Match.builder().match(AnswerSearchDto.Artist.builder().artist(artist).build()).build());
+		// must.add(AnswerSearchDto.MatchPhrase.builder()
+		// 	.match_phrase(AnswerSearchDto.Lyrics.builder().lyrics(lyrics).build())
+		// 	.build());
+		//
+		// AnswerSearchDto answerSearchDto = AnswerSearchDto.builder()
+		// 	.query(AnswerSearchDto.Query.builder()
+		// 		.bool(AnswerSearchDto.Bool.builder()
+		// 			.Must(must)
+		// 			.build())
+		// 		.build())
+		// 	.build();
 
-		AnswerSearchDto answerSearchDto = AnswerSearchDto.builder()
-			.query(AnswerSearchDto.Query.builder()
-				.bool(AnswerSearchDto.Bool.builder()
-					.Must(must)
-					.build())
-				.build())
-			.build();
+		String answerSearchV3 = "{\"query\": {\"bool\": {\"must\": [{\"match\": {\"title\": \""+ title +"\"}}, {\"match\" : {\"artist\" : \""+ artist +"\"}}, {\"bool\": {\"must\": [{\"match_phrase\": {\"lyrics\": \"" + lyrics + "\"}}, {\"match\": {\"lyrics.ngram\": \"" + lyrics + "\" }}]}}]}}}";
 
-		return getSearchResponse(answerSearchDto);
+		return getSearchResponse(answerSearchV3);
 	}
 
 	private ElasticSearchResponseDto getSearchResponse(Object requestBody) {
