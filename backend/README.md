@@ -24,11 +24,11 @@
 
 <a name="backend-data-teams"></a>
 
-## 🤝 Backend & Data Team
+## 🤝 Backend
 
-| <a href="https://github.com/takealook97"><img src="https://github.com/takealook97.png" width="120"/></a> | <a href="https://github.com/YUNDONGHWI"><img src="https://github.com/YUNDONGHWI.png" width="120"/></a> | <a href="https://github.com/heecircle"><img src="https://github.com/heecircle.png" width="120"/></a> | <a href="https://github.com/sejeong-park"><img src="https://github.com/sejeong-park.png" width="120"/></a> |
-|:--------------------------------------------------------------------------------------------------------:|:------------------------------------------------------------------------------------------------------:|:----------------------------------------------------------------------------------------------------:|:----------------------------------------------------------------------------------------------------------:|
-|                                  [김건우](https://github.com/takealook97)                                   |                                  [윤동휘](https://github.com/YUNDONGHWI)                                  |                                 [용희원](https://github.com/heecircle)                                  |                                   [박세정](https://github.com/sejeong-park)                                   |
+| <a href="https://github.com/takealook97"><img src="https://github.com/takealook97.png" width="120"/></a> | <a href="https://github.com/YUNDONGHWI"><img src="https://github.com/YUNDONGHWI.png" width="120"/></a> |
+|:--------------------------------------------------------------------------------------------------------:|:------------------------------------------------------------------------------------------------------:|
+|                                  [김건우](https://github.com/takealook97)                                   |                                  [윤동휘](https://github.com/YUNDONGHWI)                                  |
 
 ---
 
@@ -53,23 +53,6 @@
 - 게임 플로우 구축
 - 게임 내 가사 검색 기능
 - 발표 전체 담당
-
-### 용희원
-
-- 팀장
-- 음악 차트 데이터 크롤링
-- Docker를 활용한 Spark 환경 구축
-- Spark를 통한 분산 처리 진행
-- 한국어 토크나이징을 통한 제시어 추출
-- Elastic Search 동의어 사전 작성
-- Dictionary 컴포넌트 작성
-
-### 박세정
-
-- Dictionary 사전 API 구축
-- 음악 차트 데이터 크롤링
-- Docker을 활용한 Elastic Search 클러스터 구축
-- ElasticSearch custom analyzer 를 제작하여 검색 성능 개선
 
 ---
 
@@ -131,18 +114,11 @@
 
 - WebSocket (STOMP)
 - Quartz Scheduler
-- Selenium (Crawler)
-
-### data
-
-- Spark 3.5.1
-- Kibana 8.12.2
 
 ### database
 
 - MySQL 8.0.35
 - Redis 7.2
-- Elastic Search 8.12.2
 
 ### ci / cd
 
