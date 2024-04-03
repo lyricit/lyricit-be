@@ -53,7 +53,7 @@ public class RoomService {
 		// to redis
 		RoomDto roomDto = room.toDto();
 		String roomNumber = findEmptyRoomNumber();
-		roomRedisTemplate.opsForValue().set(roomNumber, roomDto);
+		roomRedisTemplate.opsForValue().set(roomNumber, roomDto);// save
 
 		log.info("\n [방 생성 완료] \n== mysql 저장 ==\n {} \n", room);
 		log.info("\n== redis 저장 == \n [{}번 방] \n {}", roomNumber, roomDto);
@@ -163,7 +163,7 @@ public class RoomService {
 		boolean isLeaderChanged) {
 		String type = isIn ? MEMBER_IN.name() : MEMBER_OUT.name();
 
-		roomRedisTemplate.opsForValue().set(roomNumber, roomDto);// update
+		updateRoom(roomNumber, roomDto);
 
 		if (isIn) {
 			log.info("\n [방 입장 완료] \n {}", memberInGameDto.getMember().nickname());
@@ -198,7 +198,7 @@ public class RoomService {
 		}
 
 		// update to Redis
-		roomRedisTemplate.opsForValue().set(roomNumber, roomDto);
+		updateRoom(roomNumber, roomDto);
 
 		// pub
 		messagePublisher.publishMemberToRoom(MEMBER_READY.name(), roomNumber, memberId);
@@ -234,6 +234,10 @@ public class RoomService {
 			throw new BaseException(ROOM_NOT_FOUND);
 		}
 		return roomRedisTemplate.opsForValue().get(roomNumber);
+	}
+
+	public void updateRoom(String roomNumber, RoomDto roomDto) {
+		roomRedisTemplate.opsForValue().set(roomNumber, roomDto);
 	}
 
 	private String findEmptyRoomNumber() {

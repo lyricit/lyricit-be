@@ -23,6 +23,12 @@ public class GameEndEventListener {
 		String roomNumber = event.getRoomNumber();
 		RoomDto roomDto = roomService.validateRoom(roomNumber);
 		roomDto.setIsPlaying(false);
+
+		roomDto.getMembers().stream()
+			.filter(member -> !member.getMember().memberId().equals(roomDto.getLeaderId()))
+			.forEach(member -> member.setIsReady(false));
+
+		roomService.updateRoom(roomNumber, roomDto);
 		messagePublisher.publishRoomToLounge(ROOM_UPDATED.name(), roomDto);
 	}
 }
