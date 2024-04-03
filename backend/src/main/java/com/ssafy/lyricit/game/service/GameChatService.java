@@ -49,7 +49,7 @@ public class GameChatService {
 
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
-	private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(10);
+	private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(50);
 	private final ConcurrentHashMap<String, ScheduledFuture<?>> highlightTasks = new ConcurrentHashMap<>();
 
 	// 게임 내 채팅 메세지 확인하는 메서드
